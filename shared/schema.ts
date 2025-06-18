@@ -159,6 +159,31 @@ export const scheduleItems = pgTable("schedule_items", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Tabela de funcionários vinculados a obras
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(), // pedreiro, servente, pintor, eletricista, etc.
+  dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(), // valor da diária
+  isActive: boolean("is_active").notNull().default(true),
+  phone: varchar("phone", { length: 20 }),
+  document: varchar("document", { length: 20 }), // CPF ou RG
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tabela de presença diária dos funcionários no diário de obras
+export const workDiaryAttendance = pgTable("work_diary_attendance", {
+  id: serial("id").primaryKey(),
+  workDiaryId: integer("work_diary_id").notNull().references(() => workDiaries.id),
+  employeeId: integer("employee_id").notNull().references(() => employees.id),
+  hoursWorked: decimal("hours_worked", { precision: 4, scale: 2 }).notNull().default("8.00"),
+  dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(), // valor pago neste dia
+  activities: text("activities"), // atividades específicas do funcionário no dia
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   projectCollaborators: many(projectCollaborators),
@@ -174,6 +199,7 @@ export const projectsRelations = relations(projects, ({ many }) => ({
   workDiaries: many(workDiaries),
   measurements: many(measurements),
   scheduleItems: many(scheduleItems),
+  employees: many(employees),
 }));
 
 export const projectCollaboratorsRelations = relations(projectCollaborators, ({ one }) => ({
@@ -281,6 +307,25 @@ export const scheduleItemsRelations = relations(scheduleItems, ({ one }) => ({
   }),
 }));
 
+export const employeesRelations = relations(employees, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [employees.projectId],
+    references: [projects.id],
+  }),
+  attendance: many(workDiaryAttendance),
+}));
+
+export const workDiaryAttendanceRelations = relations(workDiaryAttendance, ({ one }) => ({
+  workDiary: one(workDiaries, {
+    fields: [workDiaryAttendance.workDiaryId],
+    references: [workDiaries.id],
+  }),
+  employee: one(employees, {
+    fields: [workDiaryAttendance.employeeId],
+    references: [employees.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -339,6 +384,17 @@ export const insertScheduleItemSchema = createInsertSchema(scheduleItems).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertEmployeeSchema = createInsertSchema(employees).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWorkDiaryAttendanceSchema = createInsertSchema(workDiaryAttendance).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Types
