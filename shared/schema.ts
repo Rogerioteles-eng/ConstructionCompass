@@ -432,4 +432,10 @@ export type InsertMeasurement = z.infer<typeof insertMeasurementSchema>;
 export type ScheduleItem = typeof scheduleItems.$inferSelect;
 export type InsertScheduleItem = z.infer<typeof insertScheduleItemSchema>;
 
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
+
+export type WorkDiaryAttendance = typeof workDiaryAttendance.$inferSelect;
+export type InsertWorkDiaryAttendance = z.infer<typeof insertWorkDiaryAttendanceSchema>;
+
 export type ProjectCollaborator = typeof projectCollaborators.$inferSelect;

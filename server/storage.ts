@@ -11,6 +11,8 @@ import {
   measurements,
   scheduleItems,
   projectCollaborators,
+  employees,
+  workDiaryAttendance,
   type User,
   type UpsertUser,
   type Project,
@@ -34,6 +36,10 @@ import {
   type ScheduleItem,
   type InsertScheduleItem,
   type ProjectCollaborator,
+  type Employee,
+  type InsertEmployee,
+  type WorkDiaryAttendance,
+  type InsertWorkDiaryAttendance,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -80,6 +86,16 @@ export interface IStorage {
 
   // Dashboard statistics
   getDashboardStats(): Promise<any>;
+
+  // Employee operations
+  getEmployeesByProject(projectId: number): Promise<Employee[]>;
+  createEmployee(employee: InsertEmployee): Promise<Employee>;
+  updateEmployee(id: number, employee: Partial<InsertEmployee>): Promise<Employee>;
+  deleteEmployee(id: number): Promise<void>;
+
+  // Work diary attendance operations
+  getWorkDiaryAttendance(workDiaryId: number): Promise<WorkDiaryAttendance[]>;
+  addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -291,6 +307,51 @@ export class DatabaseStorage implements IStorage {
       monthlyExpenses: monthlyExpenses.total || 0,
       totalWorkers: totalWorkers.count || 0,
     };
+  }
+
+  // Employee operations
+  async getEmployeesByProject(projectId: number): Promise<Employee[]> {
+    return await db.select().from(employees)
+      .where(and(eq(employees.projectId, projectId), eq(employees.isActive, true)))
+      .orderBy(employees.name);
+  }
+
+  async createEmployee(employee: InsertEmployee): Promise<Employee> {
+    const [newEmployee] = await db.insert(employees).values(employee).returning();
+    return newEmployee;
+  }
+
+  async updateEmployee(id: number, employee: Partial<InsertEmployee>): Promise<Employee> {
+    const [updatedEmployee] = await db.update(employees)
+      .set({ ...employee, updatedAt: new Date() })
+      .where(eq(employees.id, id))
+      .returning();
+    return updatedEmployee;
+  }
+
+  async deleteEmployee(id: number): Promise<void> {
+    await db.update(employees)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(employees.id, id));
+  }
+
+  // Work diary attendance operations
+  async getWorkDiaryAttendance(workDiaryId: number): Promise<WorkDiaryAttendance[]> {
+    return await db.select({
+      id: workDiaryAttendance.id,
+      workDiaryId: workDiaryAttendance.workDiaryId,
+      employeeId: workDiaryAttendance.employeeId,
+      hoursWorked: workDiaryAttendance.hoursWorked,
+      dailyRate: workDiaryAttendance.dailyRate,
+      activities: workDiaryAttendance.activities,
+      createdAt: workDiaryAttendance.createdAt,
+    })
+    .from(workDiaryAttendance)
+    .where(eq(workDiaryAttendance.workDiaryId, workDiaryId));
+  }
+
+  async addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]> {
+    return await db.insert(workDiaryAttendance).values(attendance).returning();
   }
 }
 
