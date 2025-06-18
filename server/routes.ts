@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { parseConstructionCommand, transcribeAudio, analyzeImage } from "./openai";
 import multer from "multer";
-import { insertProjectSchema, insertBudgetSchema, insertBudgetStageSchema, insertBudgetItemSchema, insertBudgetSubitemSchema, insertExpenseSchema, insertWorkDiarySchema, insertWorkDiaryWorkerSchema, insertMeasurementSchema, insertScheduleItemSchema } from "@shared/schema";
+import { insertProjectSchema, insertBudgetSchema, insertBudgetStageSchema, insertBudgetItemSchema, insertBudgetSubitemSchema, insertExpenseSchema, insertWorkDiarySchema, insertWorkDiaryWorkerSchema, insertMeasurementSchema, insertScheduleItemSchema, insertEmployeeSchema, insertWorkDiaryAttendanceSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -309,6 +309,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating schedule item:", error);
       res.status(400).json({ message: "Failed to update schedule item" });
+    }
+  });
+
+  // Employee routes
+  app.get('/api/projects/:projectId/employees', isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const employees = await storage.getEmployeesByProject(projectId);
+      res.json(employees);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      res.status(500).json({ message: "Failed to fetch employees" });
+    }
+  });
+
+  app.post('/api/projects/:projectId/employees', isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const employeeData = insertEmployeeSchema.parse({ ...req.body, projectId });
+      const employee = await storage.createEmployee(employeeData);
+      res.status(201).json(employee);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      res.status(400).json({ message: "Failed to create employee" });
+    }
+  });
+
+  app.put('/api/employees/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const employeeData = insertEmployeeSchema.partial().parse(req.body);
+      const employee = await storage.updateEmployee(id, employeeData);
+      res.json(employee);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      res.status(400).json({ message: "Failed to update employee" });
+    }
+  });
+
+  app.delete('/api/employees/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteEmployee(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      res.status(400).json({ message: "Failed to delete employee" });
+    }
+  });
+
+  // Work diary attendance routes
+  app.get('/api/diaries/:diaryId/attendance', isAuthenticated, async (req, res) => {
+    try {
+      const diaryId = parseInt(req.params.diaryId);
+      const attendance = await storage.getWorkDiaryAttendance(diaryId);
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      res.status(500).json({ message: "Failed to fetch attendance" });
+    }
+  });
+
+  app.post('/api/diaries/:diaryId/attendance', isAuthenticated, async (req, res) => {
+    try {
+      const diaryId = parseInt(req.params.diaryId);
+      const attendanceList = req.body.attendance.map((item: any) => 
+        insertWorkDiaryAttendanceSchema.parse({ ...item, workDiaryId: diaryId })
+      );
+      const attendance = await storage.addWorkDiaryAttendance(attendanceList);
+      res.status(201).json(attendance);
+    } catch (error) {
+      console.error("Error adding attendance:", error);
+      res.status(400).json({ message: "Failed to add attendance" });
     }
   });
 
