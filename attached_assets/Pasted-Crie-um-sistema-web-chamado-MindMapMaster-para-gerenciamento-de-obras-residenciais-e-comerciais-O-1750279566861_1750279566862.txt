@@ -1,0 +1,88 @@
+Crie um sistema web chamado “MindMapMaster” para gerenciamento de obras residenciais e comerciais. O sistema será usado por engenheiros e mestres de obra para controlar orçamento, medições, diário de obras, cronograma e relatórios, com apoio de inteligência artificial (IA) para preenchimento automático a partir de comandos de voz/texto/foto.
+
+🧱 FUNCIONALIDADES ESSENCIAIS
+Login com Permissões por Perfil:
+
+Perfis: Administrador, Comprador, Mestre de Obra, Empreiteiro, Funcionário, Visualizador.
+
+Controle de acesso: cada perfil acessa apenas suas seções.
+
+Login com autenticação JWT ou Firebase Auth.
+
+Cadastro de Obras:
+
+Nome, Endereço, Cliente, Status (planejamento, execução, pausada, concluída).
+
+Permitir associar colaboradores à obra (funcionários, empreiteiros).
+
+Orçamentos (com etapas, itens e subitens):
+
+Cada obra possui 1 ou mais orçamentos.
+
+Estrutura em 3 níveis: Etapa → Item → Subitem.
+
+Para cada subitem:
+
+Descrição
+
+Quantidade
+
+Unidade (m², m, unidade, rolo, balde, etc)
+
+Preço unitário
+
+Total calculado automaticamente
+
+Interface estilo árvore ou tabela expandível, permitindo visualização geral do orçamento completo.
+
+Gastos:
+
+Relacionados à obra e, opcionalmente, ao subitem do orçamento.
+
+Campos: data, descrição, valor, comprovante (imagem/pdf).
+
+IA integrada: ao receber um comando como “gastei 30 reais com cimento na obra A”, a IA preenche automaticamente esse gasto.
+
+Diário de Obras (com IA):
+
+Registro diário com:
+
+Data
+
+Lista de funcionários presentes (nome, função, diária R$)
+
+Lista de empreiteiros e atividade
+
+Descrição das atividades do dia
+
+IA processa comandos como: “hoje estiveram presentes João e Zé, fizeram reboco e instalação elétrica” e preenche automaticamente o diário.
+
+Geração automática de folha de pagamento semanal com base nas diárias registradas.
+
+Medições de Mão de Obra:
+
+Ligadas ao orçamento.
+
+Estrutura igual: etapa → item → subitem.
+
+Campos: quantidade executada, valor unitário, total.
+
+Interface simples para o mestre de obra lançar progresso por etapa.
+
+Cronograma de Obra (estilo Microsoft Project):
+
+Visualização por Gantt.
+
+Vinculado às etapas do orçamento.
+
+Permitir avanço, previsão de término, status de atraso ou adiantamento.
+
+Relatórios:
+
+Relatório de execução (orçado vs executado).
+
+Relatório de gastos por obra, por etapa e por item.
+
+Relatório de produtividade (por funcionário e empreiteiro).
+
+Gráficos com Recharts ou Chart.js.
