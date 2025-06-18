@@ -30,6 +30,10 @@ export default function Expenses() {
   const [aiOpen, setAiOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedBudget, setSelectedBudget] = useState<string>("");
+  const [selectedStage, setSelectedStage] = useState<string>("");
+  const [selectedItem, setSelectedItem] = useState<string>("");
+  const [selectedSubitem, setSelectedSubitem] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const { toast } = useToast();
@@ -54,6 +58,18 @@ export default function Expenses() {
   const { data: projects = [] } = useQuery({
     queryKey: ["/api/projects"],
     enabled: isAuthenticated,
+  });
+
+  // Fetch budgets for selected project
+  const { data: budgets = [] } = useQuery({
+    queryKey: [`/api/projects/${selectedProject}/budgets`],
+    enabled: isAuthenticated && !!selectedProject,
+  });
+
+  // Fetch budget structure (stages, items, subitems) for selected budget
+  const { data: budgetStructure } = useQuery({
+    queryKey: [`/api/budgets/${selectedBudget}/structure`],
+    enabled: isAuthenticated && !!selectedBudget,
   });
 
   const { data: expenses = [], isLoading } = useQuery({
@@ -304,6 +320,123 @@ export default function Expenses() {
                         )}
                       </div>
 
+                      {/* Budget Hierarchy Selection */}
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 className="text-sm font-medium text-gray-700">Vincular ao Orçamento (Opcional)</h4>
+                        
+                        {/* Budget Selection */}
+                        <div>
+                          <Label htmlFor="budget">Orçamento</Label>
+                          <Select value={selectedBudget} onValueChange={(value) => {
+                            setSelectedBudget(value);
+                            setSelectedStage("");
+                            setSelectedItem("");
+                            setSelectedSubitem("");
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione um orçamento" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.isArray(budgets) && budgets.map((budget: any) => (
+                                <SelectItem key={budget.id} value={budget.id.toString()}>
+                                  {budget.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Stage Selection */}
+                        {selectedBudget && budgetStructure?.stages && (
+                          <div>
+                            <Label htmlFor="stage">Etapa</Label>
+                            <Select value={selectedStage} onValueChange={(value) => {
+                              setSelectedStage(value);
+                              setSelectedItem("");
+                              setSelectedSubitem("");
+                            }}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma etapa" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {budgetStructure.stages.map((stage: any) => (
+                                  <SelectItem key={stage.id} value={stage.id.toString()}>
+                                    {stage.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {/* Item Selection */}
+                        {selectedStage && budgetStructure?.stages && (
+                          <div>
+                            <Label htmlFor="item">Item</Label>
+                            <Select value={selectedItem} onValueChange={(value) => {
+                              setSelectedItem(value);
+                              setSelectedSubitem("");
+                            }}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione um item" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {budgetStructure.stages
+                                  .find((stage: any) => stage.id.toString() === selectedStage)
+                                  ?.items?.map((item: any) => (
+                                    <SelectItem key={item.id} value={item.id.toString()}>
+                                      {item.description}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {/* Subitem Selection */}
+                        {selectedItem && budgetStructure?.stages && (
+                          <div>
+                            <Label htmlFor="subitem">Subitem</Label>
+                            <Select value={selectedSubitem} onValueChange={(value) => {
+                              setSelectedSubitem(value);
+                              form.setValue("subitemId", value ? parseInt(value) : undefined);
+                            }}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione um subitem" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {budgetStructure.stages
+                                  .find((stage: any) => stage.id.toString() === selectedStage)
+                                  ?.items?.find((item: any) => item.id.toString() === selectedItem)
+                                  ?.subitems?.map((subitem: any) => (
+                                    <SelectItem key={subitem.id} value={subitem.id.toString()}>
+                                      {subitem.description} - {subitem.unit}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {/* Selected Item Summary */}
+                        {selectedSubitem && budgetStructure?.stages && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-sm text-blue-800">
+                              <strong>Item selecionado:</strong> {
+                                budgetStructure.stages
+                                  .find((stage: any) => stage.id.toString() === selectedStage)
+                                  ?.items?.find((item: any) => item.id.toString() === selectedItem)
+                                  ?.subitems?.find((subitem: any) => subitem.id.toString() === selectedSubitem)
+                                  ?.description
+                              }
+                            </p>
+                            <p className="text-xs text-blue-600 mt-1">
+                              Este gasto será vinculado ao item do orçamento para análise de orçado vs realizado
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
                       <div>
                         <Label htmlFor="receiptUrl">URL do Comprovante</Label>
                         <Input
@@ -374,6 +507,7 @@ export default function Expenses() {
                           <TableRow>
                             <TableHead>Data</TableHead>
                             <TableHead>Descrição</TableHead>
+                            <TableHead>Item do Orçamento</TableHead>
                             <TableHead className="text-right">Valor</TableHead>
                             <TableHead className="text-center">Comprovante</TableHead>
                             <TableHead className="text-center">Ações</TableHead>

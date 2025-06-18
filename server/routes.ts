@@ -175,6 +175,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get budget structure for expense linking
+  app.get('/api/budgets/:id/structure', isAuthenticated, async (req, res) => {
+    try {
+      const budgetId = parseInt(req.params.id);
+      const budget = await storage.getBudgetWithStructure(budgetId);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+      res.json(budget);
+    } catch (error) {
+      console.error("Error fetching budget structure:", error);
+      res.status(500).json({ message: "Failed to fetch budget structure" });
+    }
+  });
+
   // Expense routes
   app.get('/api/projects/:projectId/expenses', isAuthenticated, async (req, res) => {
     try {
