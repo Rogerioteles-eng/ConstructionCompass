@@ -297,92 +297,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Assistant routes
+  // AI Assistant routes with OpenAI integration
   app.post('/api/ai/process', isAuthenticated, async (req: any, res) => {
     try {
       const { command, projectId } = req.body;
-      const userId = req.user.claims.sub;
-
-      // Mock AI processing based on command content
-      let response = { success: false, message: '', data: null };
-
-      if (command.toLowerCase().includes('gastei') || command.toLowerCase().includes('gasto')) {
-        // Extract expense information from command
-        const amountMatch = command.match(/(\d+(?:,\d+)?)\s*reais?/i);
-        const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : 0;
-        
-        if (amount > 0 && projectId) {
-          const expense = await storage.createExpense({
-            projectId: parseInt(projectId),
-            date: new Date().toISOString().split('T')[0],
-            description: `Gasto registrado via IA: ${command}`,
-            amount: amount.toString(),
-            createdBy: userId
-          });
-
-          response = {
-            success: true,
-            message: `Gasto de R$ ${amount.toFixed(2)} registrado com sucesso!`,
-            data: expense
-          };
-        } else {
-          response = {
-            success: false,
-            message: 'Não foi possível extrair o valor do gasto ou projeto não especificado.',
-            data: null
-          };
-        }
-      } else if (command.toLowerCase().includes('presentes') || command.toLowerCase().includes('funcionários')) {
-        // Extract worker information from command
-        const workerNames = command.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g) || [];
-        const activities = command.toLowerCase().includes('reboco') ? 'Reboco das paredes' : 
-                          command.toLowerCase().includes('elétrica') ? 'Instalação elétrica' : 
-                          'Atividades diversas';
-
-        if (workerNames.length > 0 && projectId) {
-          const diary = await storage.createWorkDiary({
-            projectId: parseInt(projectId),
-            date: new Date().toISOString().split('T')[0],
-            activities: activities,
-            createdBy: userId
-          });
-
-          const workers = workerNames.map(name => ({
-            diaryId: diary.id,
-            workerName: name,
-            role: 'Operário',
-            dailyRate: '150.00',
-            isContractor: false
-          }));
-
-          await storage.addWorkDiaryWorkers(diary.id, workers);
-
-          response = {
-            success: true,
-            message: `Diário de obra atualizado com ${workerNames.length} funcionário(s): ${workerNames.join(', ')}`,
-            data: diary
-          };
-        } else {
-          response = {
-            success: false,
-            message: 'Não foi possível extrair os funcionários ou projeto não especificado.',
-            data: null
-          };
-        }
-      } else {
-        response = {
-          success: false,
-          message: 'Comando não reconhecido. Tente comandos como "gastei X reais com Y" ou "hoje estiveram presentes João e Pedro".',
-          data: null
-        };
+      if (!command || typeof command !== 'string') {
+        return res.status(400).json({ success: false, message: "Comando é obrigatório" });
       }
 
-      res.json(response);
-    } catch (error) {
+      const result = await parseConstructionCommand(command);
+      const userId = req.user.claims.sub;
+      const processedData: any = {
+        expenses: [],
+        diaryEntries: [],
+        measurements: [],
+        scheduleUpdates: []
+      };
+
+      // Determine target project
+      let targetProjectId = projectId;
+      if (result.projectName && !targetProjectId) {
+        const projects = await storage.getProjects();
+        const project = projects.find((p: any) => 
+          p.name.toLowerCase().includes(result.projectName!.toLowerCase())
+        );
+        if (project) targetProjectId = project.id;
+      }
+      
+      // Use first project if no specific project found
+      if (!targetProjectId) {
+        const projects = await storage.getProjects();
+        if (projects.length > 0) targetProjectId = projects[0].id;
+      }
+
+      if (!targetProjectId) {
+        return res.json({
+          success: false,
+          message: 'Nenhum projeto disponível para processar o comando.',
+          aiResult: result,
+          processedData
+        });
+      }
+
+      // Process expenses
+      if (result.data.expenses && result.data.expenses.length > 0) {
+        for (const expense of result.data.expenses) {
+          const createdExpense = await storage.createExpense({
+            projectId: targetProjectId,
+            description: expense.description,
+            amount: expense.amount.toString(),
+            date: expense.date,
+            createdBy: userId
+          });
+          processedData.expenses.push(createdExpense);
+        }
+      }
+
+      // Process diary entries
+      if (result.data.diaryEntries && result.data.diaryEntries.length > 0) {
+        for (const entry of result.data.diaryEntries) {
+          const createdDiary = await storage.createWorkDiary({
+            projectId: targetProjectId,
+            date: entry.date,
+            activities: entry.description,
+            createdBy: userId
+          });
+
+          // Add workers
+          if (entry.workers && entry.workers.length > 0) {
+            const workers = entry.workers.map((worker: any) => ({
+              diaryId: createdDiary.id,
+              workerName: worker.name,
+              role: worker.role,
+              dailyRate: (worker.hourlyRate * worker.hoursWorked).toString(),
+              isContractor: false
+            }));
+            
+            const createdWorkers = await storage.addWorkDiaryWorkers(createdDiary.id, workers);
+            processedData.diaryEntries.push({ ...createdDiary, workers: createdWorkers });
+          } else {
+            processedData.diaryEntries.push(createdDiary);
+          }
+        }
+      }
+
+      // Process measurements - skip for now since it requires subitemId from budget structure
+      // TODO: Implement measurement processing after budget structure exists
+      if (result.data.measurements && result.data.measurements.length > 0) {
+        // For now, we'll add measurements as notes to be processed later
+        processedData.measurementNotes = result.data.measurements.map(m => 
+          `${m.description}: ${m.quantity} ${m.unit} ${m.location ? `em ${m.location}` : ''}`
+        );
+      }
+
+      const processedCount = processedData.expenses.length + processedData.diaryEntries.length;
+      
+      res.json({
+        success: true,
+        message: `Comando processado com sucesso! ${processedCount} itens criados.`,
+        aiResult: result,
+        processedData
+      });
+    } catch (error: any) {
       console.error("Error processing AI command:", error);
-      res.status(500).json({ message: "Failed to process AI command" });
+      res.status(500).json({ 
+        success: false,
+        message: error.message || "Erro ao processar comando"
+      });
     }
   });
+
+  // Audio transcription endpoint
+  app.post('/api/ai/transcribe-audio', isAuthenticated, upload.single('audio'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Arquivo de áudio é obrigatório" });
+      }
+
+      const transcription = await transcribeAudio(req.file.buffer);
+      res.json({ success: true, transcription });
+    } catch (error: any) {
+      console.error("Error transcribing audio:", error);
+      res.status(500).json({ success: false, message: error.message || "Erro ao transcrever áudio" });
+    }
+  });
+
+  // Image analysis endpoint  
+  app.post('/api/ai/analyze-image', isAuthenticated, upload.single('image'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Imagem é obrigatória" });
+      }
+
+      const base64Image = req.file.buffer.toString('base64');
+      const analysis = await analyzeImage(base64Image);
+      res.json({ success: true, analysis });
+    } catch (error: any) {
+      console.error("Error analyzing image:", error);
+      res.status(500).json({ success: false, message: error.message || "Erro ao analisar imagem" });
+    }
+  });
+
+
 
   const httpServer = createServer(app);
   return httpServer;
