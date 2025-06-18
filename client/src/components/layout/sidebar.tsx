@@ -12,7 +12,8 @@ import {
   Calendar, 
   BarChart3,
   Bot,
-  LayoutDashboard
+  LayoutDashboard,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Orçamentos", href: "/budget", icon: Calculator },
   { name: "Gastos", href: "/expenses", icon: Receipt },
   { name: "Diário de Obras", href: "/diary", icon: BookOpen },
+  { name: "Funcionários", href: "/employees", icon: Users },
   { name: "Medições", href: "/measurements", icon: Ruler },
   { name: "Cronograma", href: "/schedule", icon: Calendar },
   { name: "Relatórios", href: "/reports", icon: BarChart3 },
@@ -38,9 +40,9 @@ export default function Sidebar({ isOpen, onToggleAI }: SidebarProps) {
 
   const getUserInitials = (user: any) => {
     if (!user) return "U";
-    const firstName = user.firstName || "";
-    const lastName = user.lastName || "";
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || user.email?.charAt(0).toUpperCase() || "U";
+    const firstName = user?.firstName || "";
+    const lastName = user?.lastName || "";
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
   };
 
   const getUserRole = (role: string) => {
@@ -77,17 +79,17 @@ export default function Sidebar({ isOpen, onToggleAI }: SidebarProps) {
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.profileImageUrl} alt={user?.firstName || "User"} />
+            <AvatarImage src={(user as any)?.profileImageUrl || ""} alt={(user as any)?.firstName || "User"} />
             <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 truncate">
-              {user?.firstName && user?.lastName 
-                ? `${user.firstName} ${user.lastName}` 
-                : user?.email?.split('@')[0] || "Usuário"}
+              {(user as any)?.firstName && (user as any)?.lastName 
+                ? `${(user as any).firstName} ${(user as any).lastName}` 
+                : (user as any)?.email?.split('@')[0] || "Usuário"}
             </p>
             <p className="text-sm text-gray-500 truncate">
-              {getUserRole(user?.role || "viewer")}
+              {getUserRole((user as any)?.role || "viewer")}
             </p>
           </div>
         </div>
