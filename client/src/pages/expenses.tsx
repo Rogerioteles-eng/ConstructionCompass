@@ -524,6 +524,15 @@ export default function Expenses() {
                                   {expense.description}
                                 </div>
                               </TableCell>
+                              <TableCell>
+                                {expense.subitemId ? (
+                                  <Badge variant="outline" className="text-xs">
+                                    Item #{expense.subitemId}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-gray-400 text-sm">Não vinculado</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right font-medium">
                                 {formatCurrency(parseFloat(expense.amount))}
                               </TableCell>
