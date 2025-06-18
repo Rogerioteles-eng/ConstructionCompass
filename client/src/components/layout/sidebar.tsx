@@ -101,15 +101,15 @@ export default function Sidebar({ isOpen, onToggleAI }: SidebarProps) {
           const isActive = location === item.href;
           return (
             <Link key={item.name} href={item.href}>
-              <a className={cn(
-                "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
+              <div className={cn(
+                "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors cursor-pointer",
                 isActive 
                   ? "construction-primary text-white" 
                   : "text-gray-700 hover:bg-gray-100"
               )}>
                 <item.icon className="h-5 w-5" />
                 <span>{item.name}</span>
-              </a>
+              </div>
             </Link>
           );
         })}
