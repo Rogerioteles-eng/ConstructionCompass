@@ -78,21 +78,17 @@ export default function EmployeesManagement() {
   });
 
   // Queries
-  const { data: employees = [], isLoading } = useQuery({
+  const { data: employees = [], isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
   });
 
   // Mutations
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: EmployeeFormData) => {
-      const response = await apiRequest("/api/employees", {
-        method: "POST",
-        body: JSON.stringify({
-          ...data,
-          dailyRate: parseFloat(data.dailyRate)
-        })
+      return await apiRequest("/api/employees", "POST", {
+        ...data,
+        dailyRate: parseFloat(data.dailyRate)
       });
-      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
@@ -121,14 +117,10 @@ export default function EmployeesManagement() {
 
   const updateEmployeeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: EmployeeFormData }) => {
-      const response = await apiRequest(`/api/employees/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          ...data,
-          dailyRate: parseFloat(data.dailyRate)
-        })
+      return await apiRequest(`/api/employees/${id}`, "PUT", {
+        ...data,
+        dailyRate: parseFloat(data.dailyRate)
       });
-      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
@@ -158,9 +150,7 @@ export default function EmployeesManagement() {
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/employees/${id}`, {
-        method: "DELETE"
-      });
+      return await apiRequest(`/api/employees/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
@@ -216,7 +206,7 @@ export default function EmployeesManagement() {
   };
 
   // Filtrar funcionários
-  const filteredEmployees = employees?.filter((employee) => {
+  const filteredEmployees = employees.filter((employee: Employee) => {
     const matchesSearch = 
       employee.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
       employee.role.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -230,16 +220,16 @@ export default function EmployeesManagement() {
     const matchesRole = roleFilter === "todos" || employee.role === roleFilter;
 
     return matchesSearch && matchesStatus && matchesType && matchesRole;
-  }) || [];
+  });
 
   // Estatísticas
-  const totalEmployees = employees?.length || 0;
-  const activeEmployees = employees?.filter(emp => emp.status === "ativo").length || 0;
-  const contractors = employees?.filter(emp => emp.isContractor).length || 0;
-  const regularEmployees = employees?.filter(emp => !emp.isContractor).length || 0;
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter((emp: Employee) => emp.status === "ativo").length;
+  const contractors = employees.filter((emp: Employee) => emp.isContractor).length;
+  const regularEmployees = employees.filter((emp: Employee) => !emp.isContractor).length;
 
   // Lista única de funções para filtro
-  const uniqueRoles = Array.from(new Set(employees?.map(emp => emp.role) || []));
+  const uniqueRoles = Array.from(new Set(employees.map((emp: Employee) => emp.role)));
 
   if (authLoading) {
     return <div>Loading...</div>;
@@ -550,7 +540,7 @@ export default function EmployeesManagement() {
                                 {employee.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>R$ {employee.dailyRate.toFixed(2)}</TableCell>
+                            <TableCell>R$ {parseFloat(employee.dailyRate.toString()).toFixed(2)}</TableCell>
                             <TableCell>
                               <div className="flex gap-2">
                                 <Button
