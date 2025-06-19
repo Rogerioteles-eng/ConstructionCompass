@@ -64,6 +64,11 @@ export default function Diary() {
     enabled: isAuthenticated && !!selectedProject,
   });
 
+  const { data: employees = [] } = useQuery({
+    queryKey: [`/api/projects/${selectedProject}/employees`],
+    enabled: isAuthenticated && !!selectedProject,
+  });
+
   const form = useForm<DiaryFormData>({
     resolver: zodResolver(diaryFormSchema),
     defaultValues: {
@@ -334,11 +339,41 @@ export default function Diary() {
                           {fields.map((field, index) => (
                             <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg">
                               <div>
-                                <Label>Nome *</Label>
-                                <Input
-                                  {...form.register(`workers.${index}.workerName`)}
-                                  placeholder="Nome completo"
-                                />
+                                <Label>Funcionário *</Label>
+                                <Select
+                                  value={form.watch(`workers.${index}.workerName`)}
+                                  onValueChange={(value) => {
+                                    const selectedEmployee = (employees as any[]).find(emp => emp.name === value);
+                                    if (selectedEmployee) {
+                                      form.setValue(`workers.${index}.workerName`, selectedEmployee.name);
+                                      form.setValue(`workers.${index}.role`, selectedEmployee.role);
+                                      form.setValue(`workers.${index}.dailyRate`, selectedEmployee.dailyRate?.toString() || "");
+                                      form.setValue(`workers.${index}.isContractor`, selectedEmployee.isContractor || false);
+                                    } else {
+                                      form.setValue(`workers.${index}.workerName`, value);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione ou digite nome" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {(employees as any[]).map((employee) => (
+                                      <SelectItem key={employee.id} value={employee.name}>
+                                        {employee.name} - {employee.role}
+                                        {employee.isContractor && " (Empreiteiro)"}
+                                      </SelectItem>
+                                    ))}
+                                    <SelectItem value="__manual__">+ Adicionar novo funcionário</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {form.watch(`workers.${index}.workerName`) === "__manual__" && (
+                                  <Input
+                                    className="mt-2"
+                                    onChange={(e) => form.setValue(`workers.${index}.workerName`, e.target.value)}
+                                    placeholder="Digite o nome do funcionário"
+                                  />
+                                )}
                                 {form.formState.errors.workers?.[index]?.workerName && (
                                   <p className="text-sm text-red-500 mt-1">
                                     {form.formState.errors.workers[index]?.workerName?.message}
@@ -420,6 +455,21 @@ export default function Diary() {
                           </p>
                         )}
                       </div>
+
+                      <PhotoUpload
+                        label="Fotos da Obra"
+                        multiple={true}
+                        onMultiplePhotos={(photos) => {
+                          setDiaryPhotos(photos);
+                        }}
+                        onPhotoCapture={(base64) => {
+                          const newPhotos = [...diaryPhotos, base64];
+                          setDiaryPhotos(newPhotos);
+                        }}
+                        onRemove={() => {
+                          setDiaryPhotos([]);
+                        }}
+                      />
 
                       <div className="flex justify-end space-x-3 pt-4">
                         <Button
