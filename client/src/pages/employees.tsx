@@ -1,109 +1,69 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, Users, DollarSign, ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Search } from "lucide-react";
 import { Link } from "wouter";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
+import AIAssistant from "@/components/ai-assistant";
 
 export default function Employees() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Link href="/">
-            <Button variant="outline" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao Menu Principal
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestão de Funcionários</h1>
-          <p className="text-gray-600">Cadastre e gerencie funcionários e empreiteiros</p>
-        </div>
-
-        {/* Botões de navegação */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Link href="/employee-registration">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
-              <CardHeader className="text-center h-32 flex flex-col justify-center">
-                <UserPlus className="w-12 h-12 mx-auto text-blue-600 mb-2" />
-                <CardTitle className="text-lg">Cadastro de Funcionário</CardTitle>
-                <CardDescription className="text-sm">
-                  Cadastre um novo funcionário ou empreiteiro
-                </CardDescription>
+    <div className="flex h-screen bg-background">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onToggleAI={() => setAiOpen(!aiOpen)}
+      />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Funcionários"
+          subtitle="Cadastre e gerencie funcionários e empreiteiros"
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
+        
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Cadastro de Funcionário</CardTitle>
               </CardHeader>
-              <CardContent className="text-center pb-6">
-                <Button className="w-full">
-                  Novo Cadastro
-                </Button>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">Cadastre um novo funcionário ou empreiteiro</p>
+                <Link href="/employee-registration">
+                  <Button size="lg" className="w-full">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Novo Cadastro
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
-          </Link>
 
-          <Link href="/employee-list">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
-              <CardHeader className="text-center h-32 flex flex-col justify-center">
-                <Users className="w-12 h-12 mx-auto text-green-600 mb-2" />
-                <CardTitle className="text-lg">Lista de Funcionários</CardTitle>
-                <CardDescription className="text-sm">
-                  Visualize e gerencie todos os funcionários
-                </CardDescription>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Lista de Funcionários</CardTitle>
               </CardHeader>
-              <CardContent className="text-center pb-6">
-                <Button className="w-full" variant="outline">
-                  Ver Lista
-                </Button>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">Visualize e gerencie todos os funcionários</p>
+                <Link href="/employee-list">
+                  <Button variant="outline" size="lg" className="w-full">
+                    <Search className="h-5 w-5 mr-2" />
+                    Ver Lista
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
-          </Link>
-
-          <Link href="/employee-costs">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
-              <CardHeader className="text-center h-32 flex flex-col justify-center">
-                <DollarSign className="w-12 h-12 mx-auto text-orange-600 mb-2" />
-                <CardTitle className="text-lg">Custos de Funcionários</CardTitle>
-                <CardDescription className="text-sm">
-                  Analise custos por data, obra e função
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center pb-6">
-                <Button className="w-full" variant="outline">
-                  Ver Custos
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* Informações adicionais */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sistema de Funcionários</CardTitle>
-            <CardDescription>
-              Gerencie funcionários e empreiteiros de forma centralizada
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold mb-2">Cadastro</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Cadastro único para toda a empresa</li>
-                  <li>• Funções pré-definidas com opção "Outros"</li>
-                  <li>• Separação entre funcionários e empreiteiros</li>
-                  <li>• Dados de contato e documentos</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Controle</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Filtros avançados por função, tipo e status</li>
-                  <li>• Edição de dados dos funcionários</li>
-                  <li>• Controle de status: ativo, inativo, afastado</li>
-                  <li>• Relatórios de custos por período</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </main>
       </div>
+      
+      <AIAssistant 
+        isOpen={aiOpen} 
+        onClose={() => setAiOpen(false)} 
+      />
     </div>
   );
 }
