@@ -27,6 +27,7 @@ export default function Employees() {
         
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
+            {/* Cadastro de Funcionário */}
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>Cadastro de Funcionário</CardTitle>
@@ -42,6 +43,7 @@ export default function Employees() {
               </CardContent>
             </Card>
 
+            {/* Lista de Funcionários */}
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>Lista de Funcionários</CardTitle>
