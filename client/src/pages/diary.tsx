@@ -63,8 +63,7 @@ export default function Diary() {
   });
 
   const { data: employees, isLoading: loadingEmployees } = useQuery({
-    queryKey: ["/api/projects", selectedProjectId, "employees"],
-    enabled: !!selectedProjectId,
+    queryKey: ["/api/employees"],
     retry: false,
   });
 

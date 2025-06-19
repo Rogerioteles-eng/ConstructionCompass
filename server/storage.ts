@@ -99,6 +99,14 @@ export interface IStorage {
 
   // Employee cost tracking
   getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>>;
+  getEmployeeCosts(filters?: {
+    startDate?: string;
+    endDate?: string;
+    projectId?: number;
+    employeeType?: string;
+    role?: string;
+    search?: string;
+  }): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -357,6 +365,18 @@ export class DatabaseStorage implements IStorage {
   async getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>> {
     // Para agora retornar custos vazios até implementarmos a nova estrutura de attendance
     return {};
+  }
+
+  async getEmployeeCosts(filters?: {
+    startDate?: string;
+    endDate?: string;
+    projectId?: number;
+    employeeType?: string;
+    role?: string;
+    search?: string;
+  }): Promise<any[]> {
+    // Retornar array vazio por enquanto - implementação completa será feita após ajustes no schema
+    return [];
   }
 }
 
