@@ -358,29 +358,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>> {
-    const attendanceRecords = await db
-      .select({
-        employeeId: workDiaryAttendance.employeeId,
-        dailyRate: workDiaryAttendance.dailyRate,
-        date: workDiaries.date,
-      })
-      .from(workDiaryAttendance)
-      .leftJoin(workDiaries, eq(workDiaryAttendance.diaryId, workDiaries.id))
-      .where(eq(workDiaries.projectId, projectId));
-
-    const costs: Record<number, { totalCost: number; workDays: number }> = {};
-
-    attendanceRecords.forEach(record => {
-      if (record.employeeId) {
-        if (!costs[record.employeeId]) {
-          costs[record.employeeId] = { totalCost: 0, workDays: 0 };
-        }
-        costs[record.employeeId].totalCost += parseFloat(record.dailyRate.toString());
-        costs[record.employeeId].workDays += 1;
-      }
-    });
-
-    return costs;
+    // Para agora retornar custos vazios até implementarmos a nova estrutura de attendance
+    return {};
   }
 }
 
