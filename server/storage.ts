@@ -451,7 +451,7 @@ export class DatabaseStorage implements IStorage {
     console.log('Employee costs filters:', filters);
     
     // Se não há filtros aplicados, retorna array vazio
-    if (!filters || (!filters.startDate && !filters.endDate && !filters.projectId && !filters.employeeType && !filters.role && !filters.search)) {
+    if (!filters || (!filters.startDate && !filters.endDate && !filters.projectId && !filters.employeeType && !filters.role && !filters.employeeId)) {
       return [];
     }
     
@@ -479,14 +479,8 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(employees.role, filters.role));
     }
 
-    if (filters?.search && filters.search.trim() !== '') {
-      conditions.push(
-        or(
-          like(employees.name, `%${filters.search}%`),
-          like(employees.role, `%${filters.search}%`),
-          like(projects.name, `%${filters.search}%`)
-        )
-      );
+    if (filters?.employeeId) {
+      conditions.push(eq(employees.id, parseInt(filters.employeeId.toString())));
     }
 
     // Se ainda não há condições após os filtros, retorna array vazio

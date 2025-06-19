@@ -450,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId: req.query.projectId ? parseInt(req.query.projectId as string) : undefined,
         employeeType: req.query.employeeType as string,
         role: req.query.role as string,
-        search: req.query.search as string,
+        employeeId: req.query.employeeId ? parseInt(req.query.employeeId as string) : undefined,
       };
       
       console.log('Employee costs filters:', filters);
