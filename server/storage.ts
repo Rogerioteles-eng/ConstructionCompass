@@ -537,7 +537,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(workDiaries)
         .innerJoin(projects, eq(workDiaries.projectId, projects.id))
-        .where(sql`${workDiaries.photos} IS NOT NULL AND jsonb_array_length(${workDiaries.photos}) > 0`)
+        .where(sql`${workDiaries.photos} IS NOT NULL AND array_length(${workDiaries.photos}, 1) > 0`)
         .orderBy(desc(workDiaries.date));
 
       return diaries.filter(diary => diary.photos && diary.photos.length > 0);
@@ -584,7 +584,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(workDiaries)
         .innerJoin(projects, eq(workDiaries.projectId, projects.id))
-        .where(sql`${workDiaries.photos} IS NOT NULL AND jsonb_array_length(${workDiaries.photos}) > 0`)
+        .where(sql`${workDiaries.photos} IS NOT NULL AND array_length(${workDiaries.photos}, 1) > 0`)
         .orderBy(desc(workDiaries.date));
 
       // Flatten photos with individual IDs
