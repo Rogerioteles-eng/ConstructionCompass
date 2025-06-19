@@ -289,7 +289,7 @@ export default function EmployeeList() {
                         {employee.isContractor ? "Empreiteiro" : "Funcionário"}
                       </Badge>
                     </TableCell>
-                    <TableCell>R$ {employee.dailyRate.toFixed(2)}</TableCell>
+                    <TableCell>R$ {parseFloat(employee.dailyRate).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {employee.phone && <Phone className="w-3 h-3" />}
