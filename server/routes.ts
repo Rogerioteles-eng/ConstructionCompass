@@ -388,6 +388,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/employees', isAuthenticated, async (req, res) => {
+    try {
+      const employeeData = insertEmployeeSchema.parse(req.body);
+      const employee = await storage.createEmployee(employeeData);
+      res.status(201).json(employee);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      res.status(400).json({ message: "Failed to create employee" });
+    }
+  });
+
+  app.patch('/api/employees/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const employeeData = insertEmployeeSchema.partial().parse(req.body);
+      const employee = await storage.updateEmployee(id, employeeData);
+      res.json(employee);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      res.status(400).json({ message: "Failed to update employee" });
+    }
+  });
+
+  // Employee costs route
+  app.get("/api/employee-costs", isAuthenticated, async (req, res) => {
+    try {
+      const filters = {
+        startDate: req.query.startDate as string,
+        endDate: req.query.endDate as string,
+        projectId: req.query.projectId ? parseInt(req.query.projectId as string) : undefined,
+        employeeType: req.query.employeeType as string,
+        role: req.query.role as string,
+        search: req.query.search as string,
+      };
+      
+      const costs = await storage.getEmployeeCosts(filters);
+      res.json(costs);
+    } catch (error) {
+      console.error("Error fetching employee costs:", error);
+      res.status(500).json({ message: "Failed to fetch employee costs" });
+    }
+  });
+
   // Work diary attendance routes
   app.get('/api/diaries/:diaryId/attendance', isAuthenticated, async (req, res) => {
     try {

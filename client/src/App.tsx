@@ -14,7 +14,11 @@ import Diary from "@/pages/diary";
 import Measurements from "@/pages/measurements";
 import Schedule from "@/pages/schedule";
 import Reports from "@/pages/reports";
+import Employees from "@/pages/employees";
+import EmployeeRegistration from "@/pages/employee-registration";
+import EmployeeList from "@/pages/employee-list";
 import EmployeesManagement from "@/pages/employees-management";
+import EmployeeCosts from "@/pages/employee-costs";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,7 +37,11 @@ function Router() {
           <Route path="/measurements" component={Measurements} />
           <Route path="/schedule" component={Schedule} />
           <Route path="/reports" component={Reports} />
-          <Route path="/employees" component={EmployeesManagement} />
+          <Route path="/employees" component={Employees} />
+          <Route path="/employee-registration" component={EmployeeRegistration} />
+          <Route path="/employee-list" component={EmployeeList} />
+          <Route path="/employee-costs" component={EmployeeCosts} />
+          <Route path="/employees-management" component={EmployeesManagement} />
         </>
       )}
       <Route component={NotFound} />
