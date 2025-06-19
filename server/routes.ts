@@ -242,10 +242,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const userId = req.user.claims.sub;
-      const { attendance, ...diaryData } = req.body;
+      const { attendance, date, activities, photos } = req.body;
       
       const diaryToCreate = {
-        ...diaryData,
+        date,
+        activities,
+        photos: photos || [],
         projectId: projectId,
         createdBy: userId
       };

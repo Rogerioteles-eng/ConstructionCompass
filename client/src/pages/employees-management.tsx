@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertEmployeeSchema, type Employee, type InsertEmployee } from "@shared/schema";
 import { Plus, Edit, Trash2, Search, Filter } from "lucide-react";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
+import AIAssistant from "@/components/ai-assistant";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 // Schema para o formulário
 const employeeFormSchema = insertEmployeeSchema.extend({
@@ -26,6 +31,9 @@ const employeeFormSchema = insertEmployeeSchema.extend({
 type EmployeeFormData = z.infer<typeof employeeFormSchema>;
 
 export default function EmployeesManagement() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -38,6 +46,21 @@ export default function EmployeesManagement() {
   // Estados para modais
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, authLoading, toast]);
 
   // Buscar funcionários
   const { data: employees, isLoading } = useQuery<Employee[]>({
@@ -187,13 +210,34 @@ export default function EmployeesManagement() {
   const regularEmployees = employees?.filter(emp => !emp.isContractor).length || 0;
 
   // Lista única de funções para filtro
-  const uniqueRoles = [...new Set(employees?.map(emp => emp.role) || [])];
+  const uniqueRoles = Array.from(new Set(employees?.map(emp => emp.role) || []));
+
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Gestão de Funcionários</h1>
-      </div>
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onToggleAI={() => setAiOpen(!aiOpen)}
+      />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onToggleAI={() => setAiOpen(!aiOpen)}
+        />
+        
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestão de Funcionários</h1>
+            </div>
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -516,7 +560,14 @@ export default function EmployeesManagement() {
             )}
           </CardContent>
         </Card>
+          </div>
+        </main>
       </div>
+      
+      <AIAssistant 
+        isOpen={aiOpen} 
+        onClose={() => setAiOpen(false)} 
+      />
     </div>
   );
 }
