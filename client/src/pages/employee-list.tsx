@@ -141,7 +141,7 @@ export default function EmployeeList() {
           <Link href="/employees">
             <Button variant="outline" className="mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+              Voltar para Gestão de Funcionários
             </Button>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Lista de Funcionários</h1>

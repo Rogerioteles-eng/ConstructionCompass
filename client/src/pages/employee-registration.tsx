@@ -47,7 +47,7 @@ export default function EmployeeRegistration() {
 
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: any) => {
-      await apiRequest("/api/employees", {
+      return await apiRequest("/api/employees", {
         method: "POST",
         body: JSON.stringify(data),
       });
@@ -98,7 +98,7 @@ export default function EmployeeRegistration() {
           <Link href="/employees">
             <Button variant="outline" className="mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+              Voltar para Gestão de Funcionários
             </Button>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Cadastro de Funcionário</h1>

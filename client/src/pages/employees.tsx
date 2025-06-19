@@ -15,15 +15,15 @@ export default function Employees() {
         {/* Botões de navegação */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Link href="/employee-registration">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+              <CardHeader className="text-center h-32 flex flex-col justify-center">
                 <UserPlus className="w-12 h-12 mx-auto text-blue-600 mb-2" />
-                <CardTitle>Cadastro de Funcionário</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg">Cadastro de Funcionário</CardTitle>
+                <CardDescription className="text-sm">
                   Cadastre um novo funcionário ou empreiteiro
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center pb-6">
                 <Button className="w-full">
                   Novo Cadastro
                 </Button>
@@ -32,15 +32,15 @@ export default function Employees() {
           </Link>
 
           <Link href="/employee-list">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+              <CardHeader className="text-center h-32 flex flex-col justify-center">
                 <Users className="w-12 h-12 mx-auto text-green-600 mb-2" />
-                <CardTitle>Lista de Funcionários</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg">Lista de Funcionários</CardTitle>
+                <CardDescription className="text-sm">
                   Visualize e gerencie todos os funcionários
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center pb-6">
                 <Button className="w-full" variant="outline">
                   Ver Lista
                 </Button>
@@ -49,15 +49,15 @@ export default function Employees() {
           </Link>
 
           <Link href="/employee-costs">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+              <CardHeader className="text-center h-32 flex flex-col justify-center">
                 <DollarSign className="w-12 h-12 mx-auto text-orange-600 mb-2" />
-                <CardTitle>Custos de Funcionários</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg">Custos de Funcionários</CardTitle>
+                <CardDescription className="text-sm">
                   Analise custos por data, obra e função
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center">
+              <CardContent className="text-center pb-6">
                 <Button className="w-full" variant="outline">
                   Ver Custos
                 </Button>

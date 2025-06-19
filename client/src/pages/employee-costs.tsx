@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, DollarSign, Users, Filter } from "lucide-react";
+import { Search, Calendar, DollarSign, Users, Filter, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -105,7 +106,13 @@ export default function EmployeeCosts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="mb-6">
+        <Link href="/employees">
+          <Button variant="outline" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar para Gestão de Funcionários
+          </Button>
+        </Link>
         <h1 className="text-3xl font-bold">Custos de Funcionários</h1>
       </div>
 
