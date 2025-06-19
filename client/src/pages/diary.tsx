@@ -41,6 +41,7 @@ export default function Diary() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
     activities: "",
     photos: [] as string[]
   });
@@ -97,6 +98,7 @@ export default function Diary() {
 
   const resetForm = () => {
     setFormData({
+      date: new Date().toISOString().split('T')[0],
       activities: "",
       photos: []
     });
@@ -151,7 +153,7 @@ export default function Diary() {
     }));
     
     createDiaryMutation.mutate({
-      date: selectedDate.toISOString().split('T')[0],
+      date: formData.date,
       activities: formData.activities,
       photos: formData.photos,
       attendance: attendance
@@ -213,6 +215,18 @@ export default function Diary() {
                 </DialogHeader>
                 
                 <div className="space-y-6">
+                  {/* Data */}
+                  <div>
+                    <Label htmlFor="date">Data do Registro</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      className="mt-2"
+                    />
+                  </div>
+
                   {/* Descrição das Atividades */}
                   <div>
                     <Label htmlFor="activities">Descrição das Atividades</Label>
@@ -277,6 +291,13 @@ export default function Diary() {
                       />
                     </div>
                     
+                    {/* Debug info */}
+                    {employeeSearch && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Funcionários disponíveis: {employees ? (Array.isArray(employees) ? employees.length : 'não é array') : 'carregando...'}
+                      </div>
+                    )}
+                    
                     {/* Lista de Sugestões */}
                     {employeeSearch && (
                       <div className="mt-2 bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto">
@@ -299,6 +320,11 @@ export default function Diary() {
                         {getFilteredEmployees(employeeSearch).length === 0 && (
                           <div className="px-3 py-2 text-muted-foreground">
                             Nenhum funcionário encontrado
+                            {employees && Array.isArray(employees) && employees.length > 0 && (
+                              <div className="text-xs mt-1">
+                                Funcionários cadastrados: {employees.map(emp => emp.name).join(', ')}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
