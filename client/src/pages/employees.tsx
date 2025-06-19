@@ -8,7 +8,7 @@ import Header from "@/components/layout/header";
 import AIAssistant from "@/components/ai-assistant";
 
 export default function Employees() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiOpen, setAiOpen] = useState(false);
 
   return (
