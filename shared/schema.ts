@@ -160,17 +160,16 @@ export const scheduleItems = pgTable("schedule_items", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Tabela de funcionários vinculados a obras
+// Tabela de funcionários - cadastro único (não vinculado a obras específicas)
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").notNull().references(() => projects.id),
   name: varchar("name", { length: 255 }).notNull(),
   role: varchar("role", { length: 100 }).notNull(), // pedreiro, servente, pintor, eletricista, etc.
   dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(), // valor da diária
   isContractor: boolean("is_contractor").notNull().default(false), // distingue empreiteiro de funcionário
-  isActive: boolean("is_active").notNull().default(true),
   phone: varchar("phone", { length: 20 }),
-  document: varchar("document", { length: 20 }), // CPF ou RG
+  document: varchar("document", { length: 50 }), // CPF ou RG
+  status: varchar("status", { length: 20 }).notNull().default("ativo"), // ativo, inativo, afastado
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -201,7 +200,6 @@ export const projectsRelations = relations(projects, ({ many }) => ({
   workDiaries: many(workDiaries),
   measurements: many(measurements),
   scheduleItems: many(scheduleItems),
-  employees: many(employees),
 }));
 
 export const projectCollaboratorsRelations = relations(projectCollaborators, ({ one }) => ({
@@ -309,11 +307,7 @@ export const scheduleItemsRelations = relations(scheduleItems, ({ one }) => ({
   }),
 }));
 
-export const employeesRelations = relations(employees, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [employees.projectId],
-    references: [projects.id],
-  }),
+export const employeesRelations = relations(employees, ({ many }) => ({
   attendance: many(workDiaryAttendance),
 }));
 

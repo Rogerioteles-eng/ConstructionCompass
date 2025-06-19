@@ -313,9 +313,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Employee operations
-  async getEmployeesByProject(projectId: number): Promise<Employee[]> {
+  async getEmployees(): Promise<Employee[]> {
     return await db.select().from(employees)
-      .where(and(eq(employees.projectId, projectId), eq(employees.isActive, true)))
       .orderBy(employees.name);
   }
 
@@ -333,9 +332,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteEmployee(id: number): Promise<void> {
-    await db.update(employees)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(employees.id, id));
+    await db.delete(employees).where(eq(employees.id, id));
   }
 
   // Work diary attendance operations
