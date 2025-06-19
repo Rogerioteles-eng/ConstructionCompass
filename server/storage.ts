@@ -109,6 +109,10 @@ export interface IStorage {
     role?: string;
     search?: string;
   }): Promise<any[]>;
+
+  // Sharing operations
+  getAllWorkDiariesWithPhotos(): Promise<any[]>;
+  getAllExpensesWithReceipts(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -518,6 +522,53 @@ export class DatabaseStorage implements IStorage {
       totalCost: Number(result.dailyRate || 0),
       hoursWorked: 8 // Sempre 8 horas pois é diária
     }));
+  }
+
+  // Sharing operations
+  async getAllWorkDiariesWithPhotos(): Promise<any[]> {
+    try {
+      const diaries = await db
+        .select({
+          id: workDiaries.id,
+          date: workDiaries.date,
+          projectId: workDiaries.projectId,
+          projectName: projects.name,
+          photos: workDiaries.photos,
+        })
+        .from(workDiaries)
+        .innerJoin(projects, eq(workDiaries.projectId, projects.id))
+        .where(isNotNull(workDiaries.photos))
+        .orderBy(desc(workDiaries.date));
+
+      return diaries.filter(diary => diary.photos && diary.photos.length > 0);
+    } catch (error) {
+      console.error("Error fetching diary images:", error);
+      throw error;
+    }
+  }
+
+  async getAllExpensesWithReceipts(): Promise<any[]> {
+    try {
+      const expensesWithReceipts = await db
+        .select({
+          id: expenses.id,
+          date: expenses.date,
+          projectId: expenses.projectId,
+          projectName: projects.name,
+          description: expenses.description,
+          receipt: expenses.receipt,
+          amount: expenses.amount,
+        })
+        .from(expenses)
+        .innerJoin(projects, eq(expenses.projectId, projects.id))
+        .where(isNotNull(expenses.receipt))
+        .orderBy(desc(expenses.date));
+
+      return expensesWithReceipts;
+    } catch (error) {
+      console.error("Error fetching expense documents:", error);
+      throw error;
+    }
   }
 }
 

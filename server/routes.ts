@@ -634,6 +634,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Share endpoints
+  app.get("/api/share/images", isAuthenticated, async (req, res) => {
+    try {
+      const diaries = await storage.getAllWorkDiariesWithPhotos();
+      res.json(diaries);
+    } catch (error) {
+      console.error("Error fetching diary images:", error);
+      res.status(500).json({ message: "Failed to fetch diary images" });
+    }
+  });
+
+  app.get("/api/share/documents", isAuthenticated, async (req, res) => {
+    try {
+      const expenses = await storage.getAllExpensesWithReceipts();
+      res.json(expenses);
+    } catch (error) {
+      console.error("Error fetching expense documents:", error);
+      res.status(500).json({ message: "Failed to fetch expense documents" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

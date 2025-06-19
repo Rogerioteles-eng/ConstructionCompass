@@ -13,7 +13,8 @@ import {
   BarChart3,
   Bot,
   LayoutDashboard,
-  Users
+  Users,
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Funcionários", href: "/employees", icon: Users },
   { name: "Medições", href: "/measurements", icon: Ruler },
   { name: "Cronograma", href: "/schedule", icon: Calendar },
+  { name: "Compartilhamento", href: "/share", icon: Share2 },
   { name: "Relatórios", href: "/reports", icon: BarChart3 },
 ];
 
