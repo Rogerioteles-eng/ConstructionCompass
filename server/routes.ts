@@ -248,11 +248,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed diaryData:", JSON.stringify(diaryData, null, 2));
       console.log("Attendance data:", JSON.stringify(attendance, null, 2));
       
-      const diary = await storage.createWorkDiary({
-        ...insertWorkDiarySchema.parse(diaryData),
-        projectId,
+      const diaryToCreate = {
+        ...diaryData,
+        projectId: projectId,
         createdBy: userId
-      });
+      };
+      
+      console.log("About to create diary with:", JSON.stringify(diaryToCreate, null, 2));
+      
+      const diary = await storage.createWorkDiary(
+        insertWorkDiarySchema.parse(diaryToCreate)
+      );
 
       if (attendance && attendance.length > 0) {
         const validatedAttendance = attendance.map((att: any, index: number) => {
@@ -273,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(201).json(diary);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating work diary:", error);
       if (error.issues) {
         console.error("Validation issues:", error.issues);
