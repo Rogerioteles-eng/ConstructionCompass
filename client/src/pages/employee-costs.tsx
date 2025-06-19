@@ -198,7 +198,7 @@ export default function EmployeeCosts() {
                   <div key={date} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold">
-                        {format(new Date(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        {format(new Date(date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                       </h3>
                       <Badge variant="secondary" className="text-lg px-3 py-1">
                         R$ {dayData.totalCost.toFixed(2)}
