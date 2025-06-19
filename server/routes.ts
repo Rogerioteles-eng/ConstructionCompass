@@ -255,15 +255,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       if (attendance && attendance.length > 0) {
-        const validatedAttendance = attendance.map((att: any) => ({
-          workDiaryId: diary.id,
-          employeeId: parseInt(att.employeeId),
-          hoursWorked: parseFloat("8.0"),
-          dailyRate: parseFloat(att.dailyRate) || 0,
-          activities: att.role || ""
-        }));
+        console.log('Processing attendance data:', attendance);
+        const validatedAttendance = attendance.map((att: any) => {
+          const attendanceData = {
+            workDiaryId: diary.id,
+            employeeId: parseInt(att.employeeId),
+            hoursWorked: 8.0,
+            dailyRate: att.dailyRate ? parseFloat(att.dailyRate.toString()) : 0,
+            activities: att.role || ""
+          };
+          console.log('Validated attendance item:', attendanceData);
+          return attendanceData;
+        });
         
-        await storage.addWorkDiaryAttendance(validatedAttendance);
+        const savedAttendance = await storage.addWorkDiaryAttendance(validatedAttendance);
+        console.log('Saved attendance:', savedAttendance);
       }
 
       res.status(201).json(diary);

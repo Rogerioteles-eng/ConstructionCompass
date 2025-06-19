@@ -354,8 +354,8 @@ export default function Diary() {
 
       {selectedProjectId && (
         <>
-          {/* Botão para Novo Registro */}
-          <div className="mb-6">
+          {/* Botões para Novo Registro e Visualizar Existentes */}
+          <div className="mb-6 space-y-4">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="w-full">
