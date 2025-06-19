@@ -96,6 +96,9 @@ export interface IStorage {
   // Work diary attendance operations
   getWorkDiaryAttendance(workDiaryId: number): Promise<WorkDiaryAttendance[]>;
   addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]>;
+
+  // Employee cost tracking
+  getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -352,6 +355,32 @@ export class DatabaseStorage implements IStorage {
 
   async addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]> {
     return await db.insert(workDiaryAttendance).values(attendance).returning();
+  }
+
+  async getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>> {
+    const attendanceRecords = await db
+      .select({
+        employeeId: workDiaryAttendance.employeeId,
+        dailyRate: workDiaryAttendance.dailyRate,
+        date: workDiaries.date,
+      })
+      .from(workDiaryAttendance)
+      .leftJoin(workDiaries, eq(workDiaryAttendance.diaryId, workDiaries.id))
+      .where(eq(workDiaries.projectId, projectId));
+
+    const costs: Record<number, { totalCost: number; workDays: number }> = {};
+
+    attendanceRecords.forEach(record => {
+      if (record.employeeId) {
+        if (!costs[record.employeeId]) {
+          costs[record.employeeId] = { totalCost: 0, workDays: 0 };
+        }
+        costs[record.employeeId].totalCost += parseFloat(record.dailyRate.toString());
+        costs[record.employeeId].workDays += 1;
+      }
+    });
+
+    return costs;
   }
 }
 

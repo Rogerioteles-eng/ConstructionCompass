@@ -242,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const userId = req.user.claims.sub;
-      const { workers, ...diaryData } = req.body;
+      const { attendance, ...diaryData } = req.body;
       
       const diary = await storage.createWorkDiary({
         ...insertWorkDiarySchema.parse(diaryData),
@@ -250,15 +250,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: userId
       });
 
-      if (workers && workers.length > 0) {
-        const validatedWorkers = workers.map((worker: any) => insertWorkDiaryWorkerSchema.parse(worker));
-        await storage.addWorkDiaryWorkers(diary.id, validatedWorkers);
+      if (attendance && attendance.length > 0) {
+        const validatedAttendance = attendance.map((att: any) => ({
+          diaryId: diary.id,
+          employeeId: att.employeeId || null,
+          employeeName: att.employeeName,
+          role: att.role,
+          dailyRate: parseFloat(att.dailyRate),
+          isContractor: att.isContractor,
+        }));
+        await storage.addWorkDiaryAttendance(validatedAttendance);
       }
 
       res.status(201).json(diary);
     } catch (error) {
       console.error("Error creating work diary:", error);
       res.status(400).json({ message: "Failed to create work diary" });
+    }
+  });
+
+  // Employee cost tracking
+  app.get('/api/projects/:projectId/employee-costs', isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const costs = await storage.getEmployeeCostsByProject(projectId);
+      res.json(costs);
+    } catch (error) {
+      console.error("Error fetching employee costs:", error);
+      res.status(500).json({ message: "Failed to fetch employee costs" });
     }
   });
 
