@@ -85,7 +85,7 @@ export default function EmployeeCosts() {
   };
 
   // Listas únicas para filtros
-  const uniqueRoles = [...new Set(employeeCosts?.map(cost => cost.role) || [])];
+  const uniqueRoles = Array.from(new Set(employeeCosts?.map(cost => cost.role) || []));
 
   // Agrupar por período
   const costsByDate = filteredCosts.reduce((acc, cost) => {
@@ -231,7 +231,7 @@ export default function EmployeeCosts() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todas as Obras</SelectItem>
-                  {projects && Array.isArray(projects) && projects.map((project: any) => (
+                  {Array.isArray(projects) && projects.map((project: any) => (
                     <SelectItem key={project.id} value={project.id.toString()}>
                       {project.name}
                     </SelectItem>

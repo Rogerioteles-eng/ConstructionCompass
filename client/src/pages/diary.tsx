@@ -55,7 +55,7 @@ export default function Diary() {
   // Função para abrir diário para visualização/edição
   const handleDateClick = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    const diary = diaries?.find((d: any) => d.date === dateStr);
+    const diary = Array.isArray(diaries) ? diaries.find((d: any) => d.date === dateStr) : null;
     
     if (diary) {
       setSelectedDiary(diary);
@@ -272,7 +272,7 @@ export default function Diary() {
               <SelectValue placeholder="Selecione um projeto" />
             </SelectTrigger>
             <SelectContent>
-              {projects && Array.isArray(projects) && projects.map((project: any) => (
+              {Array.isArray(projects) && projects.map((project: any) => (
                 <SelectItem key={project.id} value={project.id.toString()}>
                   {project.name} - {project.address}
                 </SelectItem>
