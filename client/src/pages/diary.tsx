@@ -47,7 +47,6 @@ export default function Diary() {
   });
   
   const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>([]);
-  const [employeeSearch, setEmployeeSearch] = useState("");
 
   if (!isAuthenticated) {
     return <div>Por favor, faça login para acessar o diário de obras.</div>;
@@ -103,19 +102,6 @@ export default function Diary() {
       photos: []
     });
     setSelectedEmployees([]);
-    setEmployeeSearch("");
-  };
-
-  const getFilteredEmployees = (searchTerm: string) => {
-    if (!employees || !searchTerm) return [];
-    
-    const employeeArray = Array.isArray(employees) ? employees : [];
-    
-    return employeeArray.filter((emp: Employee) => {
-      const nameMatch = emp?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const roleMatch = emp?.role?.toLowerCase().includes(searchTerm.toLowerCase());
-      return nameMatch || roleMatch;
-    });
   };
 
   const addEmployee = (employee: Employee) => {
@@ -123,7 +109,6 @@ export default function Diary() {
     if (!isAlreadySelected) {
       setSelectedEmployees([...selectedEmployees, employee]);
     }
-    setEmployeeSearch("");
   };
 
   const removeEmployee = (employeeId: number) => {
@@ -278,57 +263,43 @@ export default function Diary() {
                     )}
                   </div>
 
-                  {/* Busca de Funcionários */}
+                  {/* Seleção de Funcionários */}
                   <div>
                     <Label>Funcionários Presentes</Label>
-                    <div className="relative mt-2">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Buscar funcionário por nome ou função..."
-                        value={employeeSearch}
-                        onChange={(e) => setEmployeeSearch(e.target.value)}
-                        className="pl-9"
-                      />
+                    <div className="mt-2">
+                      <Select value="" onValueChange={(value) => {
+                        if (!employees || !Array.isArray(employees)) return;
+                        const employee = employees.find((emp: Employee) => emp.id.toString() === value);
+                        if (employee) addEmployee(employee);
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar funcionário..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employees && Array.isArray(employees) && employees.length > 0 ? (
+                            employees
+                              .filter((emp: Employee) => !selectedEmployees.some(selected => selected.id === emp.id))
+                              .map((employee: Employee) => (
+                                <SelectItem key={employee.id} value={employee.id.toString()}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>{employee.name}</span>
+                                    <div className="text-sm text-muted-foreground ml-2">
+                                      {employee.role} - R$ {employee.dailyRate}/dia
+                                      {employee.isContractor && (
+                                        <Badge variant="outline" className="ml-1">Empreiteiro</Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                              ))
+                          ) : (
+                            <SelectItem value="no-employees" disabled>
+                              {loadingEmployees ? "Carregando..." : "Nenhum funcionário cadastrado"}
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    
-                    {/* Debug info */}
-                    {employeeSearch && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Funcionários disponíveis: {employees ? (Array.isArray(employees) ? employees.length : 'não é array') : 'carregando...'}
-                      </div>
-                    )}
-                    
-                    {/* Lista de Sugestões */}
-                    {employeeSearch && (
-                      <div className="mt-2 bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto">
-                        {getFilteredEmployees(employeeSearch).map((employee: Employee) => (
-                          <button
-                            key={employee.id}
-                            type="button"
-                            className="w-full px-3 py-2 text-left hover:bg-gray-100 border-b last:border-b-0"
-                            onClick={() => addEmployee(employee)}
-                          >
-                            <div className="font-medium">{employee.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {employee.role} - R$ {employee.dailyRate}/dia
-                              {employee.isContractor && (
-                                <Badge variant="outline" className="ml-2">Empreiteiro</Badge>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                        {getFilteredEmployees(employeeSearch).length === 0 && (
-                          <div className="px-3 py-2 text-muted-foreground">
-                            Nenhum funcionário encontrado
-                            {employees && Array.isArray(employees) && employees.length > 0 && (
-                              <div className="text-xs mt-1">
-                                Funcionários cadastrados: {employees.map(emp => emp.name).join(', ')}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Funcionários Selecionados */}
