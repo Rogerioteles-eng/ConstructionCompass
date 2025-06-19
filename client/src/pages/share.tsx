@@ -4,8 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Share2, Image, FileText, Download, Building2, Calendar } from "lucide-react";
+import { Share2, Image, FileText, Download, Building2, Calendar, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,6 +39,7 @@ export default function Share() {
   const [aiOpen, setAiOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("images");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -78,20 +80,26 @@ export default function Share() {
     
     // Only add photos if they exist and are valid
     if (image.photos && Array.isArray(image.photos) && image.photos.length > 0) {
-      // Ensure we have a valid date
-      const dateObj = new Date(image.date);
-      const isValidDate = dateObj instanceof Date && !isNaN(dateObj.getTime());
+      // Parse date correctly - the backend sends YYYY-MM-DD format
+      const [year, month, day] = image.date.split('-');
+      const correctDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       
-      if (isValidDate) {
-        image.photos.forEach((photo, index) => {
-          // Only add photo if it's not empty
-          if (photo && photo.trim() !== '') {
-            // Parse date correctly - the backend sends YYYY-MM-DD format
-            const [year, month, day] = image.date.split('-');
-            const correctDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-            
+      // Create a unique array to avoid duplicates
+      const uniquePhotos = image.photos.filter((photo, index) => 
+        image.photos.indexOf(photo) === index
+      );
+      
+      uniquePhotos.forEach((photo, index) => {
+        // Only add photo if it's not empty and not already added
+        if (photo && photo.trim() !== '') {
+          const photoId = `${image.id}_${index}`;
+          
+          // Check if this photo is already in the array
+          const exists = acc[projectKey].some((p: any) => p.url === photo);
+          
+          if (!exists) {
             acc[projectKey].push({
-              id: `${image.id}_${index}_${Math.random()}`, // Make unique ID
+              id: photoId,
               projectName: image.projectName,
               date: image.date,
               formattedDate: format(correctDate, 'dd/MM/yyyy', { locale: ptBR }),
@@ -99,8 +107,8 @@ export default function Share() {
               filename: `${image.projectName}_${format(correctDate, 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
             });
           }
-        });
-      }
+        }
+      });
     }
     
     return acc;
@@ -255,7 +263,8 @@ export default function Share() {
                               <img
                                 src={photo.url}
                                 alt={`Foto ${photo.formattedDate}`}
-                                className="w-full h-24 object-cover rounded-lg border"
+                                className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => setSelectedImage(photo.url)}
                               />
                               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
                                 {photo.formattedDate}
@@ -361,6 +370,34 @@ export default function Share() {
       </div>
 
       <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
+      
+      {/* Photo Viewer Modal */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-4 pb-0">
+            <DialogTitle>Visualizar Foto</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            {selectedImage && (
+              <div className="relative">
+                <img
+                  src={selectedImage}
+                  alt="Foto em tamanho completo"
+                  className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-2 right-2 bg-white/90 hover:bg-white"
+                  onClick={() => setSelectedImage(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
