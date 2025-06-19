@@ -387,7 +387,7 @@ export const insertEmployeeSchema = createInsertSchema(employees).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  dailyRate: z.coerce.number().min(0),
+  dailyRate: z.union([z.string(), z.number()]).transform(val => Number(val)),
 });
 
 export const insertWorkDiaryAttendanceSchema = createInsertSchema(workDiaryAttendance).omit({

@@ -327,13 +327,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEmployee(employee: InsertEmployee): Promise<Employee> {
-    const [newEmployee] = await db.insert(employees).values(employee).returning();
+    const [newEmployee] = await db.insert(employees).values({
+      name: employee.name,
+      role: employee.role,
+      dailyRate: employee.dailyRate.toString(),
+      isContractor: employee.isContractor || false,
+      phone: employee.phone,
+      document: employee.document,
+      status: employee.status || "ativo"
+    }).returning();
     return newEmployee;
   }
 
   async updateEmployee(id: number, employee: Partial<InsertEmployee>): Promise<Employee> {
+    const updateData: any = { ...employee, updatedAt: new Date() };
+    if (updateData.dailyRate !== undefined) {
+      updateData.dailyRate = updateData.dailyRate.toString();
+    }
     const [updatedEmployee] = await db.update(employees)
-      .set({ ...employee, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(employees.id, id))
       .returning();
     return updatedEmployee;
