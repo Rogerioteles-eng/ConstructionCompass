@@ -252,12 +252,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (attendance && attendance.length > 0) {
         const validatedAttendance = attendance.map((att: any) => ({
-          diaryId: diary.id,
-          employeeId: att.employeeId || null,
-          employeeName: att.employeeName,
-          role: att.role,
-          dailyRate: parseFloat(att.dailyRate),
-          isContractor: att.isContractor,
+          workDiaryId: diary.id,
+          employeeId: parseInt(att.employeeId),
+          hoursWorked: 8.0,
+          dailyRate: parseFloat(att.dailyRate) || 0,
+          activities: att.role || ""
         }));
         await storage.addWorkDiaryAttendance(validatedAttendance);
       }

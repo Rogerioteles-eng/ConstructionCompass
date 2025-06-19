@@ -157,20 +157,27 @@ export default function Diary() {
 
     const allAttendance = [
       ...selectedEmployees.map(emp => ({
-        employeeId: emp.id,
-        employeeName: emp.name,
-        role: emp.role,
-        dailyRate: emp.dailyRate.toString(),
-        isContractor: emp.isContractor
+        employeeId: Number(emp.id),
+        employeeName: emp.name || '',
+        role: emp.role || '',
+        dailyRate: Number(emp.dailyRate || 0).toString(),
+        isContractor: Boolean(emp.isContractor)
       })),
       ...selectedContractors.map(emp => ({
-        employeeId: emp.id,
-        employeeName: emp.name,
-        role: emp.role,
-        dailyRate: emp.dailyRate.toString(),
-        isContractor: emp.isContractor
+        employeeId: Number(emp.id),
+        employeeName: emp.name || '',
+        role: emp.role || '',
+        dailyRate: Number(emp.dailyRate || 0).toString(),
+        isContractor: Boolean(emp.isContractor)
       }))
     ];
+
+    console.log('Dados a serem enviados:', {
+      date: formData.date,
+      activities: formData.activities,
+      photos: formData.photos,
+      attendance: allAttendance
+    });
     
     createDiaryMutation.mutate({
       date: formData.date,
