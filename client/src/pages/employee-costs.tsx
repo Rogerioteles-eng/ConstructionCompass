@@ -41,8 +41,16 @@ export default function EmployeeCosts() {
   });
 
   // Buscar custos apenas quando há filtros
+  const queryParams = new URLSearchParams();
+  if (startDate) queryParams.append('startDate', startDate);
+  if (endDate) queryParams.append('endDate', endDate);
+  if (projectFilter !== "todos") queryParams.append('projectId', projectFilter);
+  if (employeeTypeFilter !== "todos") queryParams.append('employeeType', employeeTypeFilter);
+  if (roleFilter !== "todos") queryParams.append('role', roleFilter);
+  if (searchFilter) queryParams.append('search', searchFilter);
+
   const { data: employeeCosts, isLoading } = useQuery({
-    queryKey: ["/api/employee-costs", { startDate, endDate, projectId: projectFilter === "todos" ? undefined : parseInt(projectFilter), employeeType: employeeTypeFilter === "todos" ? undefined : employeeTypeFilter, role: roleFilter === "todos" ? undefined : roleFilter, search: searchFilter || undefined }],
+    queryKey: [`/api/employee-costs?${queryParams.toString()}`],
     enabled: hasFilters,
   });
 
