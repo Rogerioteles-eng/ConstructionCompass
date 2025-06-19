@@ -128,8 +128,8 @@ export default function Diary() {
   };
 
   const calculateTotalCost = () => {
-    const employeeCost = selectedEmployees.reduce((total, emp) => total + emp.dailyRate, 0);
-    const contractorCost = selectedContractors.reduce((total, emp) => total + emp.dailyRate, 0);
+    const employeeCost = selectedEmployees.reduce((total, emp) => total + Number(emp.dailyRate || 0), 0);
+    const contractorCost = selectedContractors.reduce((total, emp) => total + Number(emp.dailyRate || 0), 0);
     return employeeCost + contractorCost;
   };
 
@@ -391,7 +391,7 @@ export default function Diary() {
                                   </SelectItem>
                                 ))
                               ) : (
-                                <SelectItem value="no-contractors" disabled>
+                                <SelectItem value="no-contractors">
                                   {index < selectedContractors.length ? "Empreiteiro selecionado" : "Nenhum empreiteiro disponível"}
                                 </SelectItem>
                               )}
