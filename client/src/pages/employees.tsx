@@ -218,6 +218,12 @@ export default function Employees() {
     enabled: isAuthenticated && !!selectedProject,
   }) as { data: any[], isLoading: boolean };
 
+  // Get work diary costs for employees
+  const { data: employeeCosts = {} } = useQuery({
+    queryKey: [`/api/projects/${selectedProject}/employee-costs`],
+    enabled: isAuthenticated && !!selectedProject,
+  }) as { data: Record<number, { totalCost: number; workDays: number }>, isLoading: boolean };
+
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: EmployeeFormData) => {
       const response = await apiRequest("POST", `/api/projects/${selectedProject}/employees`, data);
@@ -652,6 +658,59 @@ export default function Employees() {
                       />
                     </TabsContent>
                   </Tabs>
+                </CardContent>
+              </Card>
+
+              {/* Cost Tracking Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Custos por Funcionário (Diário de Obras)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Função</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead className="text-center">Dias Trabalhados</TableHead>
+                        <TableHead className="text-right">Custo Total</TableHead>
+                        <TableHead className="text-right">Custo Médio/Dia</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.isArray(employees) && employees.map((employee: any) => {
+                        const costs = employeeCosts[employee.id] || { totalCost: 0, workDays: 0 };
+                        const averageCost = costs.workDays > 0 ? costs.totalCost / costs.workDays : 0;
+                        
+                        return (
+                          <TableRow key={employee.id}>
+                            <TableCell className="font-medium">{employee.name}</TableCell>
+                            <TableCell>{employee.role}</TableCell>
+                            <TableCell>
+                              <Badge variant={employee.isContractor ? "outline" : "default"}>
+                                {employee.isContractor ? "Empreiteiro" : "Funcionário"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">{costs.workDays}</TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {formatCurrency(costs.totalCost)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(averageCost)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {(!Array.isArray(employees) || employees.length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                            Nenhum funcionário cadastrado
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </div>

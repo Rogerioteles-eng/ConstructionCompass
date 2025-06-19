@@ -23,7 +23,13 @@ import PhotoUpload from "@/components/photo-upload";
 import { z } from "zod";
 
 const diaryFormSchema = insertWorkDiarySchema.omit({ createdBy: true, projectId: true }).extend({
-  workers: z.array(insertWorkDiaryWorkerSchema.omit({ diaryId: true })).min(1, "Adicione pelo menos um funcionário")
+  attendance: z.array(z.object({
+    employeeId: z.number().optional(),
+    employeeName: z.string().min(1, "Nome obrigatório"),
+    role: z.string().min(1, "Função obrigatória"),
+    dailyRate: z.string().min(1, "Diária obrigatória"),
+    isContractor: z.boolean()
+  })).max(20, "Máximo 20 funcionários")
 });
 
 type DiaryFormData = z.infer<typeof diaryFormSchema>;
@@ -74,20 +80,18 @@ export default function Diary() {
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       activities: "",
-      workers: [
-        {
-          workerName: "",
-          role: "",
-          dailyRate: "",
-          isContractor: false,
-        }
-      ],
+      attendance: Array(7).fill(null).map(() => ({
+        employeeName: "",
+        role: "",
+        dailyRate: "",
+        isContractor: false,
+      })),
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "workers",
+    name: "attendance",
   });
 
   const createMutation = useMutation({
@@ -323,137 +327,135 @@ export default function Diary() {
 
                       <div>
                         <div className="flex items-center justify-between mb-4">
-                          <Label>Funcionários Presentes *</Label>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addWorker}
-                            size="sm"
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Adicionar Funcionário
-                          </Button>
+                          <div>
+                            <Label className="text-lg font-semibold">Presença de Funcionários</Label>
+                            <p className="text-sm text-gray-600">Selecione os funcionários que trabalharam hoje</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">Custo Total do Dia</p>
+                            <p className="text-xl font-bold text-green-600">
+                              R$ {fields.reduce((total, field, index) => {
+                                const dailyRate = parseFloat(form.watch(`attendance.${index}.dailyRate`) || "0");
+                                const employeeName = form.watch(`attendance.${index}.employeeName`);
+                                return employeeName ? total + dailyRate : total;
+                              }, 0).toFixed(2)}
+                            </p>
+                          </div>
                         </div>
                         
-                        <div className="space-y-4">
-                          {fields.map((field, index) => (
-                            <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg">
-                              <div>
-                                <Label>Funcionário *</Label>
-                                <Select
-                                  value={form.watch(`workers.${index}.workerName`)}
-                                  onValueChange={(value) => {
-                                    const selectedEmployee = (employees as any[]).find(emp => emp.name === value);
-                                    if (selectedEmployee) {
-                                      form.setValue(`workers.${index}.workerName`, selectedEmployee.name);
-                                      form.setValue(`workers.${index}.role`, selectedEmployee.role);
-                                      form.setValue(`workers.${index}.dailyRate`, selectedEmployee.dailyRate?.toString() || "");
-                                      form.setValue(`workers.${index}.isContractor`, selectedEmployee.isContractor || false);
-                                    } else {
-                                      form.setValue(`workers.${index}.workerName`, value);
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione ou digite nome" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {(employees as any[]).map((employee) => (
-                                      <SelectItem key={employee.id} value={employee.name}>
-                                        {employee.name} - {employee.role}
-                                        {employee.isContractor && " (Empreiteiro)"}
-                                      </SelectItem>
-                                    ))}
-                                    <SelectItem value="__manual__">+ Adicionar novo funcionário</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                {form.watch(`workers.${index}.workerName`) === "__manual__" && (
-                                  <Input
-                                    className="mt-2"
-                                    onChange={(e) => form.setValue(`workers.${index}.workerName`, e.target.value)}
-                                    placeholder="Digite o nome do funcionário"
-                                  />
-                                )}
-                                {form.formState.errors.workers?.[index]?.workerName && (
-                                  <p className="text-sm text-red-500 mt-1">
-                                    {form.formState.errors.workers[index]?.workerName?.message}
-                                  </p>
-                                )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {fields.map((field, index) => {
+                            const selectedEmployee = form.watch(`attendance.${index}.employeeName`);
+                            const isSelected = selectedEmployee && selectedEmployee !== "";
+                            
+                            return (
+                              <div key={field.id} className={`p-4 border-2 rounded-lg transition-all ${
+                                isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                              }`}>
+                                <div className="space-y-3">
+                                  <div>
+                                    <Label className="text-sm font-medium">Funcionário</Label>
+                                    <Select
+                                      value={form.watch(`attendance.${index}.employeeName`) || ""}
+                                      onValueChange={(value) => {
+                                        if (value === "clear") {
+                                          form.setValue(`attendance.${index}.employeeName`, "");
+                                          form.setValue(`attendance.${index}.role`, "");
+                                          form.setValue(`attendance.${index}.dailyRate`, "");
+                                          form.setValue(`attendance.${index}.isContractor`, false);
+                                          form.setValue(`attendance.${index}.employeeId`, undefined);
+                                        } else {
+                                          const selectedEmployee = (employees as any[]).find(emp => emp.name === value);
+                                          if (selectedEmployee) {
+                                            form.setValue(`attendance.${index}.employeeName`, selectedEmployee.name);
+                                            form.setValue(`attendance.${index}.role`, selectedEmployee.role);
+                                            form.setValue(`attendance.${index}.dailyRate`, selectedEmployee.dailyRate?.toString() || "");
+                                            form.setValue(`attendance.${index}.isContractor`, selectedEmployee.isContractor || false);
+                                            form.setValue(`attendance.${index}.employeeId`, selectedEmployee.id);
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Selecione um funcionário" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="clear">
+                                          <span className="text-gray-500">Limpar seleção</span>
+                                        </SelectItem>
+                                        {(employees as any[]).map((employee) => (
+                                          <SelectItem key={employee.id} value={employee.name}>
+                                            <div className="flex items-center justify-between w-full">
+                                              <span>{employee.name}</span>
+                                              <span className="text-xs text-gray-500 ml-2">
+                                                {employee.role} {employee.isContractor && "(Empreiteiro)"}
+                                              </span>
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  {isSelected && (
+                                    <div className="space-y-2 pt-2 border-t">
+                                      <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                          <span className="font-medium">Função:</span>
+                                          <p className="text-gray-600">{form.watch(`attendance.${index}.role`)}</p>
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">Diária:</span>
+                                          <p className="text-green-600 font-semibold">
+                                            R$ {parseFloat(form.watch(`attendance.${index}.dailyRate`) || "0").toFixed(2)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      {form.watch(`attendance.${index}.isContractor`) && (
+                                        <div className="flex items-center space-x-1">
+                                          <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                                            Empreiteiro
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              
-                              <div>
-                                <Label>Função *</Label>
-                                <Select
-                                  value={form.watch(`workers.${index}.role`)}
-                                  onValueChange={(value) => form.setValue(`workers.${index}.role`, value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Função" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Pedreiro">Pedreiro</SelectItem>
-                                    <SelectItem value="Servente">Servente</SelectItem>
-                                    <SelectItem value="Eletricista">Eletricista</SelectItem>
-                                    <SelectItem value="Encanador">Encanador</SelectItem>
-                                    <SelectItem value="Pintor">Pintor</SelectItem>
-                                    <SelectItem value="Carpinteiro">Carpinteiro</SelectItem>
-                                    <SelectItem value="Soldador">Soldador</SelectItem>
-                                    <SelectItem value="Operador de Máquina">Operador de Máquina</SelectItem>
-                                    <SelectItem value="Outros">Outros</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                {form.formState.errors.workers?.[index]?.role && (
-                                  <p className="text-sm text-red-500 mt-1">
-                                    {form.formState.errors.workers[index]?.role?.message}
-                                  </p>
-                                )}
-                              </div>
-                              
-                              <div>
-                                <Label>Diária (R$) *</Label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  {...form.register(`workers.${index}.dailyRate`)}
-                                  placeholder="0.00"
-                                />
-                                {form.formState.errors.workers?.[index]?.dailyRate && (
-                                  <p className="text-sm text-red-500 mt-1">
-                                    {form.formState.errors.workers[index]?.dailyRate?.message}
-                                  </p>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center space-x-2 pt-6">
-                                <input
-                                  type="checkbox"
-                                  {...form.register(`workers.${index}.isContractor`)}
-                                  className="rounded"
-                                />
-                                <Label>Empreiteiro</Label>
-                              </div>
-                              
-                              <div className="flex items-center pt-6">
-                                {fields.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => remove(index)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
-                        
-                        {form.formState.errors.workers && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {form.formState.errors.workers.message}
-                          </p>
+
+                        {fields.length < 20 && (
+                          <div className="mt-4 flex justify-center">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const newSlots = Array(3).fill(null).map(() => ({
+                                  employeeName: "",
+                                  role: "",
+                                  dailyRate: "",
+                                  isContractor: false,
+                                }));
+                                newSlots.forEach(slot => append(slot));
+                              }}
+                              size="sm"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Adicionar mais 3 espaços
+                            </Button>
+                          </div>
                         )}
+
+                        <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Funcionários presentes:</span>
+                            <span className="font-bold">
+                              {fields.filter((_, index) => form.watch(`attendance.${index}.employeeName`)).length}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       <PhotoUpload
