@@ -56,10 +56,7 @@ export default function EmployeeList() {
 
   const updateEmployeeMutation = useMutation({
     mutationFn: async (data: { id: number; employee: any }) => {
-      await apiRequest(`/api/employees/${data.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data.employee),
-      });
+      await apiRequest(`/api/employees/${data.id}`, "PATCH", data.employee);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });

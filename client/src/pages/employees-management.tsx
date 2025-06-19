@@ -65,10 +65,7 @@ export default function EmployeesManagement() {
         ...data,
         dailyRate: parseFloat(data.dailyRate),
       };
-      return apiRequest("/api/employees", {
-        method: "POST",
-        body: JSON.stringify(employeeData),
-      });
+      return apiRequest("/api/employees", "POST", employeeData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
@@ -95,10 +92,7 @@ export default function EmployeesManagement() {
         ...data,
         dailyRate: parseFloat(data.dailyRate),
       };
-      return apiRequest(`/api/employees/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(employeeData),
-      });
+      return apiRequest(`/api/employees/${id}`, "PUT", employeeData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
@@ -121,9 +115,7 @@ export default function EmployeesManagement() {
   // Mutation para deletar funcionário
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/employees/${id}`, {
-        method: "DELETE",
-      });
+      return apiRequest(`/api/employees/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
