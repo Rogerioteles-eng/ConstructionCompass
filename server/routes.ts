@@ -244,6 +244,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { attendance, ...diaryData } = req.body;
       
+      console.log("Received diary data:", JSON.stringify(req.body, null, 2));
+      console.log("Parsed diaryData:", JSON.stringify(diaryData, null, 2));
+      console.log("Attendance data:", JSON.stringify(attendance, null, 2));
+      
       const diary = await storage.createWorkDiary({
         ...insertWorkDiarySchema.parse(diaryData),
         projectId,
@@ -251,20 +255,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (attendance && attendance.length > 0) {
-        const validatedAttendance = attendance.map((att: any) => ({
-          workDiaryId: diary.id,
-          employeeId: parseInt(att.employeeId),
-          hoursWorked: 8.0,
-          dailyRate: parseFloat(att.dailyRate) || 0,
-          activities: att.role || ""
-        }));
+        const validatedAttendance = attendance.map((att: any, index: number) => {
+          console.log(`Processing attendance ${index}:`, att);
+          const validated = {
+            workDiaryId: diary.id,
+            employeeId: parseInt(att.employeeId),
+            hoursWorked: parseFloat("8.0"),
+            dailyRate: parseFloat(att.dailyRate) || 0,
+            activities: att.role || ""
+          };
+          console.log(`Validated attendance ${index}:`, validated);
+          return validated;
+        });
+        
+        console.log("Final validated attendance:", JSON.stringify(validatedAttendance, null, 2));
         await storage.addWorkDiaryAttendance(validatedAttendance);
       }
 
       res.status(201).json(diary);
     } catch (error) {
       console.error("Error creating work diary:", error);
-      res.status(400).json({ message: "Failed to create work diary" });
+      if (error.issues) {
+        console.error("Validation issues:", error.issues);
+      }
+      res.status(400).json({ message: "Failed to create work diary", error: error.message });
     }
   });
 
