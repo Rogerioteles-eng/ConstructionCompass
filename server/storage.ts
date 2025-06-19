@@ -42,7 +42,7 @@ import {
   type InsertWorkDiaryAttendance,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, gte, lte, or, like } from "drizzle-orm";
+import { eq, desc, and, sql, gte, lte, or, like, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -537,7 +537,7 @@ export class DatabaseStorage implements IStorage {
         })
         .from(workDiaries)
         .innerJoin(projects, eq(workDiaries.projectId, projects.id))
-        .where(isNotNull(workDiaries.photos))
+        .where(sql`${workDiaries.photos} IS NOT NULL AND json_array_length(${workDiaries.photos}) > 0`)
         .orderBy(desc(workDiaries.date));
 
       return diaries.filter(diary => diary.photos && diary.photos.length > 0);
@@ -556,12 +556,12 @@ export class DatabaseStorage implements IStorage {
           projectId: expenses.projectId,
           projectName: projects.name,
           description: expenses.description,
-          receipt: expenses.receipt,
+          receipt: expenses.receiptImage,
           amount: expenses.amount,
         })
         .from(expenses)
         .innerJoin(projects, eq(expenses.projectId, projects.id))
-        .where(isNotNull(expenses.receipt))
+        .where(sql`${expenses.receiptImage} IS NOT NULL`)
         .orderBy(desc(expenses.date));
 
       return expensesWithReceipts;
