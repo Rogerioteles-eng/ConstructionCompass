@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Calendar, Plus, X, Search, Save, Camera, ArrowLeft, Eye, Edit, Trash2 } from "lucide-react";
+import { Calendar, Plus, X, Search, Save, Camera, ArrowLeft, Eye, Edit, Trash2, Download } from "lucide-react";
+import { saveAs } from "file-saver";
 import PhotoUpload from "@/components/photo-upload";
 import { Badge } from "@/components/ui/badge";
 import DiaryCalendar from "@/components/diary-calendar";
@@ -124,6 +125,30 @@ export default function Diary() {
       setIsEditing(true);
       setIsViewDialogOpen(false);
       setIsDialogOpen(true);
+    }
+  };
+
+  // Função para exportar foto
+  const handleExportPhoto = async (photoUrl: string, index: number) => {
+    try {
+      const response = await fetch(photoUrl);
+      const blob = await response.blob();
+      const projectName = Array.isArray(projects) ? projects.find((p: any) => p.id === selectedProjectId)?.name || "Projeto" : "Projeto";
+      const date = selectedDiary?.date || new Date().toISOString().split('T')[0];
+      const fileName = `${projectName}_${date}_foto_${index + 1}.jpg`;
+      saveAs(blob, fileName);
+      
+      toast({
+        title: "Foto exportada",
+        description: `Foto salva como ${fileName}`,
+      });
+    } catch (error) {
+      console.error('Erro ao exportar foto:', error);
+      toast({
+        title: "Erro ao exportar",
+        description: "Não foi possível exportar a foto",
+        variant: "destructive",
+      });
     }
   };
 
@@ -800,7 +825,7 @@ export default function Diary() {
                     {selectedDiary.photos && Array.isArray(selectedDiary.photos) && selectedDiary.photos.length > 0 ? (
                       <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4">
                         {selectedDiary.photos.map((photo: string, index: number) => (
-                          <div key={index} className="aspect-video bg-muted rounded-lg overflow-hidden border">
+                          <div key={index} className="aspect-video bg-muted rounded-lg overflow-hidden border relative group">
                             <img
                               src={photo}
                               alt={`Foto ${index + 1}`}
@@ -810,6 +835,17 @@ export default function Diary() {
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                onClick={() => handleExportPhoto(photo, index)}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Exportar
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>

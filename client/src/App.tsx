@@ -19,6 +19,7 @@ import EmployeeRegistration from "@/pages/employee-registration";
 import EmployeeList from "@/pages/employee-list";
 import EmployeesManagement from "@/pages/employees-management";
 import EmployeeCosts from "@/pages/employee-costs";
+import Share from "@/pages/share";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -42,6 +43,7 @@ function Router() {
           <Route path="/employee-list" component={EmployeeList} />
           <Route path="/employee-costs" component={EmployeeCosts} />
           <Route path="/employees-management" component={EmployeesManagement} />
+          <Route path="/share" component={Share} />
         </>
       )}
       <Route component={NotFound} />
