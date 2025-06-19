@@ -168,7 +168,9 @@ export default function EmployeeCosts() {
               <span className="text-gray-900 dark:text-gray-100">Custos</span>
             </nav>
 
-      {/* Filtros */}
+            <h1 className="text-2xl font-semibold mb-6">Custos de Funcionários</h1>
+
+            {/* Filtros */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

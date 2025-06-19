@@ -634,54 +634,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Photo diary endpoints
-  app.get("/api/diary/photos", isAuthenticated, async (req, res) => {
+  // Share endpoints
+  app.get("/api/share/images", isAuthenticated, async (req, res) => {
     try {
-      const photos = await storage.getAllDiaryPhotos();
-      res.json(photos);
+      const diaries = await storage.getAllWorkDiariesWithPhotos();
+      res.json(diaries);
     } catch (error) {
-      console.error("Error fetching diary photos:", error);
-      res.status(500).json({ message: "Failed to fetch diary photos" });
+      console.error("Error fetching diary images:", error);
+      res.status(500).json({ message: "Failed to fetch diary images" });
     }
   });
 
-  app.get("/api/diary/photos/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/share/documents", isAuthenticated, async (req, res) => {
     try {
-      const photoId = parseInt(req.params.id);
-      const photo = await storage.getDiaryPhoto(photoId);
-      if (!photo) {
-        return res.status(404).json({ message: "Photo not found" });
-      }
-      
-      // Return base64 image as downloadable file
-      const base64Data = photo.data.replace(/^data:image\/[a-z]+;base64,/, "");
-      const buffer = Buffer.from(base64Data, 'base64');
-      
-      res.setHeader('Content-Type', 'image/jpeg');
-      res.setHeader('Content-Disposition', `attachment; filename="photo_${photoId}_${photo.date}.jpg"`);
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error downloading photo:", error);
-      res.status(500).json({ message: "Failed to download photo" });
-    }
-  });
-
-  app.post("/api/diary/photos", isAuthenticated, async (req, res) => {
-    try {
-      const { workId, date, photoData } = req.body;
-      const photo = await storage.saveDiaryPhoto({ workId, date, data: photoData });
-      res.status(201).json(photo);
-    } catch (error) {
-      console.error("Error saving photo:", error);
-      res.status(500).json({ message: "Failed to save photo" });
-    }
-  });
-
-  // Expense documents endpoints
-  app.get("/api/expenses/documents", isAuthenticated, async (req, res) => {
-    try {
-      const documents = await storage.getAllExpenseDocuments();
-      res.json(documents);
+      const expenses = await storage.getAllExpensesWithReceipts();
+      res.json(expenses);
     } catch (error) {
       console.error("Error fetching expense documents:", error);
       res.status(500).json({ message: "Failed to fetch expense documents" });

@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { Share2, Image, FileText, Plus, Download, Trash2, FolderPlus, Upload } from "lucide-react";
+import { Share2, Image, FileText, Download, Building2, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -17,7 +13,6 @@ import { saveAs } from "file-saver";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import AIAssistant from "@/components/ai-assistant";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 
 interface DiaryImage {
@@ -30,33 +25,26 @@ interface DiaryImage {
 
 interface ExpenseDocument {
   id: number;
+  workId: number;
   date: string;
-  projectId: number;
   projectName: string;
-  description: string;
-  receipt?: string;
+  name: string;
+  url: string;
   amount: number;
 }
 
 export default function Share() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
-  const [folderName, setFolderName] = useState("");
-  const [selectedImages, setSelectedImages] = useState<number[]>([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
 
-  // Redirect if not authenticated
+  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: "Não autorizado",
+        description: "Você foi deslogado. Fazendo login novamente...",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -64,88 +52,89 @@ export default function Share() {
       }, 500);
       return;
     }
-  }, [isAuthenticated, authLoading, toast]);
+  }, [isAuthenticated, isLoading, toast]);
 
-  // Fetch diary images grouped by date
-  const { data: diaryImages = [], isLoading: loadingImages } = useQuery<DiaryImage[]>({
+  // Fetch diary images
+  const { data: images = [], isLoading: imagesLoading } = useQuery<DiaryImage[]>({
     queryKey: ["/api/share/images"],
+    enabled: isAuthenticated,
   });
 
-  // Fetch expense documents grouped by date
-  const { data: expenseDocuments = [], isLoading: loadingDocuments } = useQuery<ExpenseDocument[]>({
+  // Fetch expense documents
+  const { data: documents = [], isLoading: documentsLoading } = useQuery<ExpenseDocument[]>({
     queryKey: ["/api/share/documents"],
+    enabled: isAuthenticated,
   });
 
-  // Group images by date
-  const imagesByDate = diaryImages.reduce((acc, diary) => {
-    const date = diary.date;
-    if (!acc[date]) {
-      acc[date] = [];
+  // Group images by project and date
+  const groupedImages = (images as DiaryImage[]).reduce((acc: any, image: DiaryImage) => {
+    const projectKey = image.projectName;
+    const dateKey = format(new Date(image.date), 'dd/MM/yyyy', { locale: ptBR });
+    
+    if (!acc[projectKey]) {
+      acc[projectKey] = {};
     }
-    acc[date].push(diary);
-    return acc;
-  }, {} as Record<string, DiaryImage[]>);
-
-  // Group documents by date
-  const documentsByDate = expenseDocuments.reduce((acc, expense) => {
-    const date = expense.date;
-    if (!acc[date]) {
-      acc[date] = [];
+    if (!acc[projectKey][dateKey]) {
+      acc[projectKey][dateKey] = [];
     }
-    acc[date].push(expense);
-    return acc;
-  }, {} as Record<string, ExpenseDocument[]>);
-
-  // Sort dates in descending order
-  const sortedImageDates = Object.keys(imagesByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-  const sortedDocumentDates = Object.keys(documentsByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
-  // Export image function
-  const handleExportImage = async (imageUrl: string, projectName: string, date: string, index: number) => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const fileName = `${projectName}_${date}_foto_${index + 1}.jpg`;
-      saveAs(blob, fileName);
-      
-      toast({
-        title: "Imagem exportada",
-        description: `Imagem salva como ${fileName}`,
+    
+    // Add each photo as a separate item
+    image.photos.forEach((photo, index) => {
+      acc[projectKey][dateKey].push({
+        id: `${image.id}_${index}`,
+        projectName: image.projectName,
+        date: image.date,
+        url: photo,
+        filename: `${image.projectName}_${dateKey.replace(/\//g, '-')}_foto_${index + 1}.jpg`
       });
+    });
+    
+    return acc;
+  }, {});
+
+  // Group documents by project and date
+  const groupedDocuments = documents.reduce((acc: any, doc: ExpenseDocument) => {
+    const projectKey = doc.projectName;
+    const dateKey = format(new Date(doc.date), 'dd/MM/yyyy', { locale: ptBR });
+    
+    if (!acc[projectKey]) {
+      acc[projectKey] = {};
+    }
+    if (!acc[projectKey][dateKey]) {
+      acc[projectKey][dateKey] = [];
+    }
+    
+    acc[projectKey][dateKey].push({
+      ...doc,
+      filename: `${doc.projectName}_${dateKey.replace(/\//g, '-')}_recibo_${doc.name}.jpg`
+    });
+    
+    return acc;
+  }, {});
+
+  // Handle file download
+  const handleDownload = (dataUrl: string, filename: string) => {
+    try {
+      const base64Data = dataUrl.replace(/^data:image\/[a-z]+;base64,/, "");
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      saveAs(blob, filename);
     } catch (error) {
-      console.error('Erro ao exportar imagem:', error);
       toast({
-        title: "Erro ao exportar",
-        description: "Não foi possível exportar a imagem",
+        title: "Erro",
+        description: "Erro ao baixar o arquivo",
         variant: "destructive",
       });
     }
   };
 
-  // Export document function
-  const handleExportDocument = async (documentUrl: string, description: string, date: string) => {
-    try {
-      const response = await fetch(documentUrl);
-      const blob = await response.blob();
-      const fileName = `${description}_${date}.pdf`;
-      saveAs(blob, fileName);
-      
-      toast({
-        title: "Documento exportado",
-        description: `Documento salvo como ${fileName}`,
-      });
-    } catch (error) {
-      console.error('Erro ao exportar documento:', error);
-      toast({
-        title: "Erro ao exportar",
-        description: "Não foi possível exportar o documento",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (authLoading) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return <div>Carregando...</div>;
   }
 
   if (!isAuthenticated) {
@@ -153,242 +142,160 @@ export default function Share() {
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:from-gray-900 dark:to-gray-800">
-      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(!aiOpen)} />
+    <div className="flex h-screen bg-neutral-50 dark:bg-gray-900">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onToggleAI={() => setAiOpen(!aiOpen)}
+      />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Compartilhamento" 
-          subtitle="Organize e compartilhe fotos e documentos dos projetos"
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          title="Compartilhamento"
+          subtitle="Organize e compartilhe fotos e documentos"
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-50 dark:bg-gray-900 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto">
+            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
               <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
               <span>/</span>
               <span className="text-gray-900 dark:text-gray-100">Compartilhamento</span>
             </nav>
 
-            <Tabs defaultValue="images" className="w-full">
+            <h1 className="text-2xl font-semibold mb-6">Compartilhamento</h1>
+
+            <Tabs defaultValue="images" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="images" className="flex items-center gap-2">
                   <Image className="h-4 w-4" />
-                  Imagens
+                  Imagens ({images.length})
                 </TabsTrigger>
                 <TabsTrigger value="documents" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  Documentos
+                  Documentos ({documents.length})
                 </TabsTrigger>
               </TabsList>
 
-              {/* Images Tab */}
               <TabsContent value="images" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Imagens do Diário de Obras</h3>
-                  <div className="flex gap-2">
-                    <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <FolderPlus className="h-4 w-4 mr-2" />
-                          Criar Pasta
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Criar Nova Pasta</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="folder-name">Nome da Pasta</Label>
-                            <Input
-                              id="folder-name"
-                              value={folderName}
-                              onChange={(e) => setFolderName(e.target.value)}
-                              placeholder="Digite o nome da pasta"
-                            />
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setIsCreateFolderOpen(false)}>
-                              Cancelar
-                            </Button>
-                            <Button onClick={() => {
-                              // TODO: Implement folder creation
-                              toast({
-                                title: "Pasta criada",
-                                description: `Pasta "${folderName}" criada com sucesso`,
-                              });
-                              setFolderName("");
-                              setIsCreateFolderOpen(false);
-                            }}>
-                              Criar
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-
-                {loadingImages ? (
+                {imagesLoading ? (
                   <div className="text-center py-8">Carregando imagens...</div>
-                ) : sortedImageDates.length > 0 ? (
-                  <div className="space-y-6">
-                    {sortedImageDates.map((date) => (
-                      <Card key={date}>
-                        <CardHeader>
-                          <CardTitle className="flex items-center justify-between">
-                            <span>{format(new Date(date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
-                            <Badge variant="secondary">
-                              {imagesByDate[date].reduce((total, diary) => total + diary.photos.length, 0)} imagens
-                            </Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {imagesByDate[date].map((diary) =>
-                              diary.photos.map((photo, index) => (
-                                <div key={`${diary.id}-${index}`} className="aspect-square bg-muted rounded-lg overflow-hidden border relative group">
-                                  <img
-                                    src={photo}
-                                    alt={`${diary.projectName} - ${date}`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2">
-                                      <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        onClick={() => handleExportImage(photo, diary.projectName, date, index)}
-                                      >
-                                        <Download className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() => {
-                                          // TODO: Implement image deletion
-                                          toast({
-                                            title: "Imagem removida",
-                                            description: "Imagem removida com sucesso",
-                                          });
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-2">
-                                    <p className="text-xs truncate">{diary.projectName}</p>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                ) : Object.keys(groupedImages).length === 0 ? (
+                  <Card>
+                    <CardContent className="py-8">
+                      <div className="text-center text-gray-500">
+                        <Image className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                        <p>Nenhuma imagem encontrada</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Image className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Nenhuma imagem encontrada no diário de obras</p>
-                  </div>
+                  Object.entries(groupedImages).map(([projectName, dateGroups]) => (
+                    <Card key={projectName}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="h-5 w-5" />
+                          {projectName}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {Object.entries(dateGroups as any).map(([date, photos]) => (
+                          <div key={date} className="border rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Calendar className="h-4 w-4" />
+                              <span className="font-medium">{date}</span>
+                              <Badge variant="secondary">{(photos as any[]).length} foto(s)</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                              {(photos as any[]).map((photo, index) => (
+                                <div key={photo.id} className="relative group">
+                                  <img
+                                    src={photo.url}
+                                    alt={`Foto ${index + 1}`}
+                                    className="w-full h-24 object-cover rounded-lg border"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto"
+                                    onClick={() => handleDownload(photo.url, photo.filename)}
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  ))
                 )}
               </TabsContent>
 
-              {/* Documents Tab */}
               <TabsContent value="documents" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Documentos de Gastos</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <FolderPlus className="h-4 w-4 mr-2" />
-                      Criar Pasta
-                    </Button>
-                  </div>
-                </div>
-
-                {loadingDocuments ? (
+                {documentsLoading ? (
                   <div className="text-center py-8">Carregando documentos...</div>
-                ) : sortedDocumentDates.length > 0 ? (
-                  <div className="space-y-6">
-                    {sortedDocumentDates.map((date) => (
-                      <Card key={date}>
-                        <CardHeader>
-                          <CardTitle className="flex items-center justify-between">
-                            <span>{format(new Date(date + 'T00:00:00'), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
-                            <Badge variant="secondary">
-                              {documentsByDate[date].length} documentos
-                            </Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            {documentsByDate[date].map((expense) => (
-                              <div key={expense.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                                <div className="flex items-center gap-3">
-                                  <FileText className="h-5 w-5 text-blue-500" />
-                                  <div>
-                                    <p className="font-medium">{expense.description}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {expense.projectName} • R$ {expense.amount.toFixed(2)}
-                                    </p>
+                ) : Object.keys(groupedDocuments).length === 0 ? (
+                  <Card>
+                    <CardContent className="py-8">
+                      <div className="text-center text-gray-500">
+                        <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                        <p>Nenhum documento encontrado</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  Object.entries(groupedDocuments).map(([projectName, dateGroups]) => (
+                    <Card key={projectName}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="h-5 w-5" />
+                          {projectName}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {Object.entries(dateGroups as any).map(([date, docs]) => (
+                          <div key={date} className="border rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Calendar className="h-4 w-4" />
+                              <span className="font-medium">{date}</span>
+                              <Badge variant="secondary">{(docs as any[]).length} documento(s)</Badge>
+                            </div>
+                            <div className="space-y-2">
+                              {(docs as any[]).map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <FileText className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                      <p className="font-medium">{doc.name}</p>
+                                      <p className="text-sm text-gray-500">R$ {doc.amount.toFixed(2)}</p>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  {expense.receipt && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleExportDocument(expense.receipt!, expense.description, date)}
-                                    >
-                                      <Download className="h-4 w-4 mr-2" />
-                                      Baixar
-                                    </Button>
-                                  )}
                                   <Button
                                     size="sm"
-                                    variant="destructive"
-                                    onClick={() => {
-                                      // TODO: Implement document deletion
-                                      toast({
-                                        title: "Documento removido",
-                                        description: "Documento removido com sucesso",
-                                      });
-                                    }}
+                                    variant="outline"
+                                    onClick={() => handleDownload(doc.url, doc.filename)}
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Baixar
                                   </Button>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Nenhum documento encontrado nos gastos</p>
-                  </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  ))
                 )}
               </TabsContent>
             </Tabs>
           </div>
         </main>
       </div>
-      
-      <AIAssistant 
-        isOpen={aiOpen} 
-        onClose={() => setAiOpen(false)} 
-      />
+
+      <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
     </div>
   );
 }

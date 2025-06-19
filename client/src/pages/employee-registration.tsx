@@ -140,7 +140,9 @@ export default function EmployeeRegistration() {
               <span className="text-gray-900 dark:text-gray-100">Cadastro</span>
             </nav>
 
-        <Card>
+            <h1 className="text-2xl font-semibold mb-6">Cadastro de Funcionário</h1>
+
+            <Card>
           <CardHeader>
             <CardTitle>Novo Funcionário</CardTitle>
             <CardDescription>
