@@ -60,6 +60,9 @@ export default function Share() {
   const { data: images = [], isLoading: imagesLoading } = useQuery<DiaryImage[]>({
     queryKey: ["/api/share/images"],
     enabled: isAuthenticated,
+    onSuccess: (data) => {
+      console.log("Raw images data:", data);
+    }
   });
 
   // Fetch expense documents
