@@ -244,17 +244,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { attendance, ...diaryData } = req.body;
       
-      console.log("Received diary data:", JSON.stringify(req.body, null, 2));
-      console.log("Parsed diaryData:", JSON.stringify(diaryData, null, 2));
-      console.log("Attendance data:", JSON.stringify(attendance, null, 2));
-      
       const diaryToCreate = {
         ...diaryData,
         projectId: projectId,
         createdBy: userId
       };
-      
-      console.log("About to create diary with:", JSON.stringify(diaryToCreate, null, 2));
       
       const diary = await storage.createWorkDiary(
         insertWorkDiarySchema.parse(diaryToCreate)

@@ -58,7 +58,7 @@ export default function Diary() {
   });
 
   const { data: diaries, isLoading: loadingDiaries } = useQuery({
-    queryKey: ["/api/projects", selectedProjectId, "diaries"],
+    queryKey: [`/api/projects/${selectedProjectId}/diaries`],
     enabled: !!selectedProjectId,
   });
 
@@ -79,7 +79,8 @@ export default function Diary() {
     },
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Registro salvo com sucesso!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects", selectedProjectId, "diaries"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${selectedProjectId}/diaries`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       setIsDialogOpen(false);
       resetForm();
     },

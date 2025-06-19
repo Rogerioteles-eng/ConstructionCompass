@@ -42,7 +42,7 @@ import {
   type InsertWorkDiaryAttendance,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -375,8 +375,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>> {
-    // Para agora retornar custos vazios até implementarmos a nova estrutura de attendance
-    return {};
+    const costs = await db
+      .select({
+        employeeId: workDiaryAttendance.employeeId,
+        dailyRate: workDiaryAttendance.dailyRate,
+        workDiaryId: workDiaryAttendance.workDiaryId,
+      })
+      .from(workDiaryAttendance)
+      .innerJoin(workDiaries, eq(workDiaryAttendance.workDiaryId, workDiaries.id))
+      .where(eq(workDiaries.projectId, projectId));
+
+    const result: Record<number, { totalCost: number; workDays: number }> = {};
+    
+    costs.forEach(cost => {
+      const employeeId = cost.employeeId;
+      if (!result[employeeId]) {
+        result[employeeId] = { totalCost: 0, workDays: 0 };
+      }
+      result[employeeId].totalCost += Number(cost.dailyRate);
+      result[employeeId].workDays += 1;
+    });
+
+    return result;
   }
 
   async getEmployeeCosts(filters?: {
@@ -387,8 +407,51 @@ export class DatabaseStorage implements IStorage {
     role?: string;
     search?: string;
   }): Promise<any[]> {
-    // Retornar array vazio por enquanto - implementação completa será feita após ajustes no schema
-    return [];
+    const conditions = [];
+
+    if (filters?.projectId) {
+      conditions.push(eq(workDiaries.projectId, filters.projectId));
+    }
+
+    if (filters?.startDate) {
+      conditions.push(sql`${workDiaries.date} >= ${filters.startDate}`);
+    }
+
+    if (filters?.endDate) {
+      conditions.push(sql`${workDiaries.date} <= ${filters.endDate}`);
+    }
+
+    if (filters?.employeeType === 'funcionario') {
+      conditions.push(eq(employees.isContractor, false));
+    } else if (filters?.employeeType === 'empreiteiro') {
+      conditions.push(eq(employees.isContractor, true));
+    }
+
+    if (filters?.role) {
+      conditions.push(eq(employees.role, filters.role));
+    }
+
+    const query = db
+      .select({
+        employeeId: employees.id,
+        employeeName: employees.name,
+        employeeRole: employees.role,
+        isContractor: employees.isContractor,
+        dailyRate: workDiaryAttendance.dailyRate,
+        workDate: workDiaries.date,
+        projectId: workDiaries.projectId,
+        projectName: projects.name,
+        activities: workDiaryAttendance.activities,
+      })
+      .from(workDiaryAttendance)
+      .innerJoin(employees, eq(workDiaryAttendance.employeeId, employees.id))
+      .innerJoin(workDiaries, eq(workDiaryAttendance.workDiaryId, workDiaries.id))
+      .innerJoin(projects, eq(workDiaries.projectId, projects.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(workDiaries.date, employees.name);
+
+    const results = await query;
+    return results;
   }
 }
 
