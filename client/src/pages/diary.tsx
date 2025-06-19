@@ -64,7 +64,13 @@ export default function Diary() {
   const { data: employees, isLoading: loadingEmployees } = useQuery({
     queryKey: ["/api/projects", selectedProjectId, "employees"],
     enabled: !!selectedProjectId,
+    retry: false,
   });
+
+  // Debug: verificar dados dos funcionários
+  console.log("Funcionários carregados:", employees);
+  console.log("Projeto selecionado:", selectedProjectId);
+  console.log("Carregando funcionários:", loadingEmployees);
 
   // Processar diários para obter datas com registros
   const datesWithEntries = diaries && Array.isArray(diaries) ? diaries.map((diary: any) => diary.date) : [];
@@ -102,11 +108,24 @@ export default function Diary() {
   };
 
   const getFilteredEmployees = (searchTerm: string) => {
-    if (!employees || !searchTerm || !Array.isArray(employees)) return [];
-    return employees.filter((emp: Employee) => 
-      emp?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp?.role?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    console.log("Buscando por:", searchTerm);
+    console.log("Dados dos funcionários:", employees);
+    
+    if (!employees || !searchTerm) return [];
+    
+    // Garantir que employees é um array
+    const employeeArray = Array.isArray(employees) ? employees : [];
+    console.log("Array de funcionários:", employeeArray);
+    
+    const filtered = employeeArray.filter((emp: Employee) => {
+      const nameMatch = emp?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const roleMatch = emp?.role?.toLowerCase().includes(searchTerm.toLowerCase());
+      console.log(`Funcionário ${emp?.name}: nome=${nameMatch}, função=${roleMatch}`);
+      return nameMatch || roleMatch;
+    });
+    
+    console.log("Funcionários filtrados:", filtered);
+    return filtered;
   };
 
   const addEmployee = (employee: Employee) => {
