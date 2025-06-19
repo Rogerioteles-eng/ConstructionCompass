@@ -20,6 +20,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import AIAssistant from "@/components/ai-assistant";
+import PhotoUpload from "@/components/photo-upload";
 import { z } from "zod";
 
 const expenseFormSchema = insertExpenseSchema.omit({ createdBy: true, projectId: true });
@@ -36,6 +37,7 @@ export default function Expenses() {
   const [selectedSubitem, setSelectedSubitem] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [receiptImage, setReceiptImage] = useState<string>("");
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
@@ -83,7 +85,7 @@ export default function Expenses() {
       date: new Date().toISOString().split('T')[0],
       description: "",
       amount: "",
-      receiptUrl: "",
+      receiptImage: "",
       subitemId: undefined,
     },
   });
@@ -124,7 +126,11 @@ export default function Expenses() {
   });
 
   const onSubmit = (data: ExpenseFormData) => {
-    createMutation.mutate(data);
+    const expenseData = {
+      ...data,
+      receiptImage: receiptImage || data.receiptImage
+    };
+    createMutation.mutate(expenseData);
   };
 
   const filteredExpenses = expenses.filter((expense: any) => {
