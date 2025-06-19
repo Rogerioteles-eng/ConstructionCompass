@@ -40,6 +40,7 @@ export default function Diary() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isOptionsDialogOpen, setIsOptionsDialogOpen] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -53,7 +54,7 @@ export default function Diary() {
   const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>([]);
   const [selectedContractors, setSelectedContractors] = useState<SelectedEmployee[]>([]);
 
-  // Função para abrir diário para criar novo ou mostrar opções
+  // Função para abrir diário para criar novo ou mostrar opções  
   const handleDateClick = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     const diary = Array.isArray(diaries) ? diaries.find((d: any) => d.date === dateStr) : null;
@@ -70,8 +71,12 @@ export default function Diary() {
       setSelectedContractors([]);
       setIsEditMode(false);
       setIsDialogOpen(true);
+    } else {
+      // Existe diário, mostrar opções
+      setSelectedDiary(diary);
+      setSelectedDate(date);
+      setIsOptionsDialogOpen(true);
     }
-    // Se existe diário, não fazer nada aqui - o usuário deve usar os botões específicos
   };
 
   // Função para iniciar edição
@@ -210,6 +215,25 @@ export default function Diary() {
       toast({
         title: "Erro",
         description: error.message || "Erro ao salvar registro",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteDiaryMutation = useMutation({
+    mutationFn: async (diaryId: number) => {
+      return await apiRequest("DELETE", `/api/diaries/${diaryId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Sucesso", description: "Diário excluído com sucesso!" });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${selectedProjectId}/diaries`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      setIsOptionsDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao excluir diário",
         variant: "destructive",
       });
     },
@@ -596,80 +620,7 @@ export default function Diary() {
             </Dialog>
           </div>
 
-          {/* Lista de Diários Existentes */}
-          {diaries && Array.isArray(diaries) && diaries.length > 0 && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Diários Existentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {diaries.map((diary: any) => (
-                    <div key={diary.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium">
-                          {new Date(diary.date + 'T00:00:00').toLocaleDateString('pt-BR')}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {diary.activities?.substring(0, 100)}...
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {diary.attendance?.length || 0} funcionário(s) presente(s)
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedDiary(diary);
-                            setIsViewDialogOpen(true);
-                          }}
-                        >
-                          Visualizar
-                        </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedDiary(diary);
-                            setFormData({
-                              date: diary.date,
-                              activities: diary.activities || '',
-                              photos: diary.photos || []
-                            });
-                            // Pre-populate selected employees from attendance
-                            if (diary.attendance) {
-                              const employees = diary.attendance.filter((att: any) => !att.isContractor);
-                              const contractors = diary.attendance.filter((att: any) => att.isContractor);
-                              setSelectedEmployees(employees.map((att: any) => ({
-                                id: att.employeeId,
-                                name: att.employeeName,
-                                role: att.role,
-                                dailyRate: Number(att.dailyRate),
-                                isContractor: false
-                              })));
-                              setSelectedContractors(contractors.map((att: any) => ({
-                                id: att.employeeId,
-                                name: att.employeeName,
-                                role: att.role,
-                                dailyRate: Number(att.dailyRate),
-                                isContractor: true
-                              })));
-                            }
-                            setIsEditMode(true);
-                            setIsDialogOpen(true);
-                          }}
-                        >
-                          Editar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
 
           {/* Calendário */}
           <DiaryCalendar

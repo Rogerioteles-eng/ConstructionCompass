@@ -96,6 +96,8 @@ export interface IStorage {
   // Work diary attendance operations
   getWorkDiaryAttendance(workDiaryId: number): Promise<WorkDiaryAttendance[]>;
   addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]>;
+  deleteWorkDiaryAttendance(workDiaryId: number): Promise<void>;
+  deleteWorkDiary(id: number): Promise<void>;
 
   // Employee cost tracking
   getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>>;
@@ -403,6 +405,14 @@ export class DatabaseStorage implements IStorage {
 
   async addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]> {
     return await db.insert(workDiaryAttendance).values(attendance).returning();
+  }
+
+  async deleteWorkDiaryAttendance(workDiaryId: number): Promise<void> {
+    await db.delete(workDiaryAttendance).where(eq(workDiaryAttendance.workDiaryId, workDiaryId));
+  }
+
+  async deleteWorkDiary(id: number): Promise<void> {
+    await db.delete(workDiaries).where(eq(workDiaries.id, id));
   }
 
   async getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>> {

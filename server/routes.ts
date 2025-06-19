@@ -282,6 +282,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/diaries/:id', isAuthenticated, async (req, res) => {
+    try {
+      const diaryId = parseInt(req.params.id);
+      
+      // Primeiro, excluir registros de presença
+      await storage.deleteWorkDiaryAttendance(diaryId);
+      
+      // Depois, excluir o diário
+      await storage.deleteWorkDiary(diaryId);
+      
+      res.status(200).json({ message: "Diário excluído com sucesso" });
+    } catch (error) {
+      console.error("Error deleting work diary:", error);
+      res.status(400).json({ message: "Failed to delete work diary" });
+    }
+  });
+
   // Employee cost tracking
   app.get('/api/projects/:projectId/employee-costs', isAuthenticated, async (req, res) => {
     try {
