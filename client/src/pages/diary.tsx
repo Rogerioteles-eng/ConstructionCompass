@@ -75,10 +75,7 @@ export default function Diary() {
   const createDiaryMutation = useMutation({
     mutationFn: async (data: any) => {
       if (!selectedProjectId) throw new Error("Projeto não selecionado");
-      return await apiRequest(`/api/projects/${selectedProjectId}/diaries`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("POST", `/api/projects/${selectedProjectId}/diaries`, data);
     },
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Registro salvo com sucesso!" });
@@ -332,7 +329,7 @@ export default function Diary() {
                                   </SelectItem>
                                 ))
                               ) : (
-                                <SelectItem value="no-employees" disabled>
+                                <SelectItem value="no-employees">
                                   {index < selectedEmployees.length ? "Funcionário selecionado" : "Nenhum funcionário disponível"}
                                 </SelectItem>
                               )}
@@ -429,12 +426,12 @@ export default function Diary() {
                       </div>
                       {selectedEmployees.length > 0 && (
                         <div className="text-sm text-green-700">
-                          Funcionários ({selectedEmployees.length}): R$ {selectedEmployees.reduce((total, emp) => total + emp.dailyRate, 0).toFixed(2)}
+                          Funcionários ({selectedEmployees.length}): R$ {selectedEmployees.reduce((total, emp) => total + Number(emp.dailyRate || 0), 0).toFixed(2)}
                         </div>
                       )}
                       {selectedContractors.length > 0 && (
                         <div className="text-sm text-green-700">
-                          Empreiteiros ({selectedContractors.length}): R$ {selectedContractors.reduce((total, emp) => total + emp.dailyRate, 0).toFixed(2)}
+                          Empreiteiros ({selectedContractors.length}): R$ {selectedContractors.reduce((total, emp) => total + Number(emp.dailyRate || 0), 0).toFixed(2)}
                         </div>
                       )}
                     </div>

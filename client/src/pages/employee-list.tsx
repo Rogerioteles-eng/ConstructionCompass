@@ -224,7 +224,7 @@ export default function EmployeeList() {
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="funcionario">Funcionários</SelectItem>
                   <SelectItem value="empreiteiro">Empreiteiros</SelectItem>
                 </SelectContent>
@@ -235,7 +235,7 @@ export default function EmployeeList() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="ativo">Ativo</SelectItem>
                   <SelectItem value="inativo">Inativo</SelectItem>
                   <SelectItem value="afastado">Afastado</SelectItem>
@@ -247,7 +247,7 @@ export default function EmployeeList() {
                   <SelectValue placeholder="Função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as funções</SelectItem>
+                  <SelectItem value="all">Todas as funções</SelectItem>
                   {uniqueRoles.map((role) => (
                     <SelectItem key={role} value={role}>
                       {role}
