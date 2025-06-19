@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, DollarSign, Users, Filter, ArrowLeft } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft, Filter } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,68 +21,38 @@ interface EmployeeCost {
   projectId: number;
   workDate: string;
   dailyRate: number;
-  hoursWorked: number;
   totalCost: number;
-}
-
-interface CostSummary {
-  totalCost: number;
-  totalDays: number;
-  totalEmployees: number;
-  totalContractors: number;
-  averageDailyCost: number;
 }
 
 export default function EmployeeCosts() {
-  // Estados para filtros
-  const [searchFilter, setSearchFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [projectFilter, setProjectFilter] = useState("todos");
   const [employeeTypeFilter, setEmployeeTypeFilter] = useState("todos");
   const [roleFilter, setRoleFilter] = useState("todos");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [searchFilter, setSearchFilter] = useState("");
 
-  // Buscar projetos para filtro
+  // Verificar se há filtros aplicados
+  const hasFilters = Boolean(startDate || endDate || projectFilter !== "todos" || employeeTypeFilter !== "todos" || roleFilter !== "todos" || searchFilter);
+
+  // Buscar projetos para o filtro
   const { data: projects } = useQuery({
     queryKey: ["/api/projects"],
   });
 
-  // Buscar custos de funcionários com filtros
-  const { data: employeeCosts, isLoading } = useQuery<EmployeeCost[]>({
-    queryKey: ["/api/employee-costs", { 
-      startDate, 
-      endDate, 
-      projectId: projectFilter !== "todos" ? projectFilter : undefined,
-      search: searchFilter || undefined,
-      employeeType: employeeTypeFilter !== "todos" ? employeeTypeFilter : undefined,
-      role: roleFilter !== "todos" ? roleFilter : undefined,
-    }],
+  // Buscar custos apenas quando há filtros
+  const { data: employeeCosts, isLoading } = useQuery({
+    queryKey: ["/api/employee-costs", { startDate, endDate, projectId: projectFilter === "todos" ? undefined : parseInt(projectFilter), employeeType: employeeTypeFilter === "todos" ? undefined : employeeTypeFilter, role: roleFilter === "todos" ? undefined : roleFilter, search: searchFilter || undefined }],
+    enabled: hasFilters,
   });
 
-  // Filtrar custos localmente (para busca em tempo real)
-  const filteredCosts = employeeCosts?.filter((cost) => {
-    const matchesSearch = 
-      cost.employeeName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      cost.role.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      cost.projectName.toLowerCase().includes(searchFilter.toLowerCase());
-    
-    const matchesProject = projectFilter === "todos" || cost.projectId.toString() === projectFilter;
-    const matchesType = employeeTypeFilter === "todos" || 
-      (employeeTypeFilter === "funcionario" && !cost.isContractor) ||
-      (employeeTypeFilter === "empreiteiro" && cost.isContractor);
-    const matchesRole = roleFilter === "todos" || cost.role === roleFilter;
-    
-    return matchesSearch && matchesProject && matchesType && matchesRole;
-  }) || [];
-
-  // Mostrar resultados apenas quando houver filtros aplicados
-  const hasFilters = startDate || endDate || projectFilter !== "todos" || employeeTypeFilter !== "todos" || roleFilter !== "todos" || searchFilter;
-  const shouldShowResults = hasFilters && filteredCosts.length > 0;
+  // Filtrar resultados no frontend se necessário
+  const filteredCosts: EmployeeCost[] = (employeeCosts as EmployeeCost[]) || [];
 
   // Listas únicas para filtros
-  const uniqueRoles = Array.from(new Set(employeeCosts?.map(cost => cost.role) || []));
+  const uniqueRoles = Array.from(new Set(filteredCosts.map(cost => cost.role)));
 
-  // Agrupar por período
+  // Agrupar por data
   const costsByDate = filteredCosts.reduce((acc, cost) => {
     const date = cost.workDate;
     if (!acc[date]) {
@@ -110,8 +80,6 @@ export default function EmployeeCosts() {
         </Link>
         <h1 className="text-3xl font-bold">Custos de Funcionários</h1>
       </div>
-
-
 
       {/* Filtros */}
       <Card>
@@ -144,24 +112,14 @@ export default function EmployeeCosts() {
             </div>
 
             <div>
-              <Label htmlFor="search">Buscar</Label>
-              <Input
-                id="search"
-                placeholder="Nome, função, obra..."
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="project">Obra</Label>
+              <Label>Obra</Label>
               <Select value={projectFilter} onValueChange={setProjectFilter}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione a obra" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todas as Obras</SelectItem>
-                  {Array.isArray(projects) && projects.map((project: any) => (
+                  <SelectItem value="todos">Todas as obras</SelectItem>
+                  {(projects as any[] || []).map((project: any) => (
                     <SelectItem key={project.id} value={project.id.toString()}>
                       {project.name}
                     </SelectItem>
@@ -171,10 +129,10 @@ export default function EmployeeCosts() {
             </div>
 
             <div>
-              <Label htmlFor="type">Tipo</Label>
+              <Label>Tipo</Label>
               <Select value={employeeTypeFilter} onValueChange={setEmployeeTypeFilter}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Tipo de funcionário" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
@@ -185,14 +143,14 @@ export default function EmployeeCosts() {
             </div>
 
             <div>
-              <Label htmlFor="role">Função</Label>
+              <Label>Função</Label>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Função" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todas</SelectItem>
-                  {uniqueRoles.map((role) => (
+                  <SelectItem value="todos">Todas as funções</SelectItem>
+                  {uniqueRoles.map(role => (
                     <SelectItem key={role} value={role}>
                       {role}
                     </SelectItem>
@@ -200,22 +158,31 @@ export default function EmployeeCosts() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label htmlFor="search">Buscar</Label>
+              <Input
+                id="search"
+                placeholder="Nome, função ou obra..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Lista de Custos Agrupados por Data */}
+      {/* Resultados */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Histórico de Custos
-          </CardTitle>
+          <CardTitle>Resultados</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Carregando custos...</div>
-          ) : sortedDates.length > 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Carregando custos...
+            </div>
+          ) : hasFilters && filteredCosts.length > 0 ? (
             <div className="space-y-6">
               {sortedDates.map((date) => {
                 const dayData = costsByDate[date];
@@ -237,9 +204,7 @@ export default function EmployeeCosts() {
                           <TableHead>Função</TableHead>
                           <TableHead>Tipo</TableHead>
                           <TableHead>Obra</TableHead>
-                          <TableHead>Jornada</TableHead>
                           <TableHead>Diária</TableHead>
-                          <TableHead>Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -253,8 +218,6 @@ export default function EmployeeCosts() {
                               </Badge>
                             </TableCell>
                             <TableCell>{cost.projectName}</TableCell>
-                            <TableCell>Diária</TableCell>
-                            <TableCell>R$ {Number(cost.dailyRate || 0).toFixed(2)}</TableCell>
                             <TableCell className="font-medium">R$ {Number(cost.totalCost || 0).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
@@ -264,9 +227,14 @@ export default function EmployeeCosts() {
                 );
               })}
             </div>
-          ) : (
+          ) : hasFilters && filteredCosts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nenhum custo encontrado com os filtros aplicados
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Aplique filtros para visualizar os custos de funcionários</p>
             </div>
           )}
         </CardContent>
