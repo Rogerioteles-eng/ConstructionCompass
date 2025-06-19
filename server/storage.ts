@@ -435,13 +435,14 @@ export class DatabaseStorage implements IStorage {
       .select({
         employeeId: employees.id,
         employeeName: employees.name,
-        employeeRole: employees.role,
+        role: employees.role,
         isContractor: employees.isContractor,
         dailyRate: workDiaryAttendance.dailyRate,
         workDate: workDiaries.date,
         projectId: workDiaries.projectId,
         projectName: projects.name,
-        activities: workDiaryAttendance.activities,
+        totalCost: workDiaryAttendance.dailyRate,
+        hoursWorked: sql<number>`8`
       })
       .from(workDiaryAttendance)
       .innerJoin(employees, eq(workDiaryAttendance.employeeId, employees.id))
@@ -451,7 +452,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(workDiaries.date, employees.name);
 
     const results = await query;
-    return results;
+    
+    // Transformar para o formato esperado pelo frontend
+    return results.map(result => ({
+      ...result,
+      totalCost: Number(result.dailyRate || 0),
+      hoursWorked: 8 // Sempre 8 horas pois é diária
+    }));
   }
 }
 

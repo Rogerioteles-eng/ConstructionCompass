@@ -101,6 +101,76 @@ export default function Diary() {
     }
   };
 
+  // Função para exportar PDF
+  const handleExportPDF = () => {
+    if (!selectedDiary) return;
+
+    const projectName = Array.isArray(projects) ? projects.find((p: any) => p.id === selectedProjectId)?.name || "Projeto" : "Projeto";
+    const date = new Date(selectedDiary.date + 'T00:00:00').toLocaleDateString('pt-BR');
+    const totalCost = selectedDiary.attendance?.reduce((total: number, att: any) => total + Number(att.dailyRate || 0), 0) || 0;
+
+    // Criar conteúdo HTML para impressão
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Diário de Obras - ${date}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .section { margin-bottom: 20px; }
+          .section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+          .employee-list { margin-top: 10px; }
+          .employee-item { padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+          .employee-info { display: flex; justify-content: between; }
+          .total-cost { background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 20px; }
+          .activities { background: #f9f9f9; padding: 15px; border-radius: 8px; white-space: pre-wrap; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Diário de Obras</h1>
+          <h2>${projectName}</h2>
+          <h3>Data: ${date}</h3>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Atividades Realizadas</div>
+          <div class="activities">${selectedDiary.activities || "Nenhuma atividade registrada"}</div>
+        </div>
+
+        ${selectedDiary.attendance && selectedDiary.attendance.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Funcionários Presentes</div>
+          <div class="employee-list">
+            ${selectedDiary.attendance.map((att: any) => `
+              <div class="employee-item">
+                <div class="employee-info">
+                  <span><strong>${att.employeeName}</strong> (${att.role}) - ${att.isContractor ? 'Empreiteiro' : 'Funcionário'}</span>
+                  <span>R$ ${Number(att.dailyRate || 0).toFixed(2)}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        <div class="total-cost">
+          <strong>Custo Total do Dia: R$ ${totalCost.toFixed(2)}</strong>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Abrir janela de impressão
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   if (!isAuthenticated) {
     return <div>Por favor, faça login para acessar o diário de obras.</div>;
   }
@@ -605,8 +675,11 @@ export default function Diary() {
 
                   {/* Botões */}
                   <div className="flex gap-2">
-                    <Button onClick={handleEdit} className="flex-1">
+                    <Button onClick={handleEdit} variant="outline" className="flex-1">
                       Editar Registro
+                    </Button>
+                    <Button onClick={handleExportPDF} className="flex-1">
+                      Exportar PDF
                     </Button>
                     <Button
                       variant="outline"

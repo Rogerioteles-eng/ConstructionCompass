@@ -76,12 +76,13 @@ export default function EmployeeCosts() {
   }) || [];
 
   // Calcular resumo
+  const uniqueDates = new Set(filteredCosts.map(cost => cost.workDate));
   const summary: CostSummary = {
     totalCost: filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0),
-    totalDays: filteredCosts.length,
+    totalDays: uniqueDates.size,
     totalEmployees: new Set(filteredCosts.filter(c => !c.isContractor).map(c => c.employeeId)).size,
     totalContractors: new Set(filteredCosts.filter(c => c.isContractor).map(c => c.employeeId)).size,
-    averageDailyCost: filteredCosts.length > 0 ? filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0) / filteredCosts.length : 0,
+    averageDailyCost: uniqueDates.size > 0 ? filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0) / uniqueDates.size : 0,
   };
 
   // Listas únicas para filtros
@@ -307,7 +308,7 @@ export default function EmployeeCosts() {
                           <TableHead>Função</TableHead>
                           <TableHead>Tipo</TableHead>
                           <TableHead>Obra</TableHead>
-                          <TableHead>Horas</TableHead>
+                          <TableHead>Jornada</TableHead>
                           <TableHead>Diária</TableHead>
                           <TableHead>Total</TableHead>
                         </TableRow>
@@ -323,7 +324,7 @@ export default function EmployeeCosts() {
                               </Badge>
                             </TableCell>
                             <TableCell>{cost.projectName}</TableCell>
-                            <TableCell>{cost.hoursWorked}h</TableCell>
+                            <TableCell>Diária</TableCell>
                             <TableCell>R$ {Number(cost.dailyRate || 0).toFixed(2)}</TableCell>
                             <TableCell className="font-medium">R$ {Number(cost.totalCost || 0).toFixed(2)}</TableCell>
                           </TableRow>
