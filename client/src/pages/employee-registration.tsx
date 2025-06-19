@@ -47,10 +47,7 @@ export default function EmployeeRegistration() {
 
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/employees", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("POST", "/api/employees", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });

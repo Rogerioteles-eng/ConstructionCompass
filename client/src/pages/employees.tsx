@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, Users, DollarSign } from "lucide-react";
+import { UserPlus, Users, DollarSign, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Employees() {
@@ -8,6 +8,12 @@ export default function Employees() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
+          <Link href="/">
+            <Button variant="outline" className="mb-4">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar ao Menu Principal
+            </Button>
+          </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestão de Funcionários</h1>
           <p className="text-gray-600">Cadastre e gerencie funcionários e empreiteiros</p>
         </div>

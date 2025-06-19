@@ -386,6 +386,8 @@ export const insertEmployeeSchema = createInsertSchema(employees).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  dailyRate: z.coerce.number().min(0),
 });
 
 export const insertWorkDiaryAttendanceSchema = createInsertSchema(workDiaryAttendance).omit({
