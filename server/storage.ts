@@ -540,7 +540,8 @@ export class DatabaseStorage implements IStorage {
         .where(sql`${workDiaries.photos} IS NOT NULL AND array_length(${workDiaries.photos}, 1) > 0`)
         .orderBy(desc(workDiaries.date));
 
-      return diaries.filter(diary => diary.photos && diary.photos.length > 0);
+      // Return only entries that actually have photos
+      return diaries.filter(diary => diary.photos && Array.isArray(diary.photos) && diary.photos.length > 0);
     } catch (error) {
       console.error("Error fetching diary images:", error);
       throw error;

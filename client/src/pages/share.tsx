@@ -76,17 +76,19 @@ export default function Share() {
       acc[projectKey] = [];
     }
     
-    // Add each photo as a separate item with correct date
-    image.photos.forEach((photo, index) => {
-      acc[projectKey].push({
-        id: `${image.id}_${index}`,
-        projectName: image.projectName,
-        date: image.date,
-        formattedDate: format(new Date(image.date), 'dd/MM/yyyy', { locale: ptBR }),
-        url: photo,
-        filename: `${image.projectName}_${format(new Date(image.date), 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
+    // Only add photos if they exist
+    if (image.photos && Array.isArray(image.photos)) {
+      image.photos.forEach((photo, index) => {
+        acc[projectKey].push({
+          id: `${image.id}_${index}`,
+          projectName: image.projectName,
+          date: image.date,
+          formattedDate: format(new Date(image.date), 'dd/MM/yyyy', { locale: ptBR }),
+          url: photo,
+          filename: `${image.projectName}_${format(new Date(image.date), 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
+        });
       });
-    });
+    }
     
     return acc;
   }, {});
