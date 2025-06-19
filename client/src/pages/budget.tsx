@@ -18,7 +18,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import AIAssistant from "@/components/ai-assistant";
-import BudgetTree from "@/components/budget-tree";
+import BudgetTable from "@/components/budget-table";
 import { z } from "zod";
 
 const budgetFormSchema = insertBudgetSchema.omit({ projectId: true });
@@ -481,7 +481,7 @@ export default function Budget() {
 
               {/* Budget Structure */}
               {selectedBudget && budgetStructure && (
-                <BudgetTree
+                <BudgetTable
                   budget={budgetStructure}
                   onAddStage={handleAddStage}
                   onAddItem={handleAddItem}
