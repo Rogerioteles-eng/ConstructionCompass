@@ -52,16 +52,13 @@ export default function Diary() {
   const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>([]);
   const [selectedContractors, setSelectedContractors] = useState<SelectedEmployee[]>([]);
 
-  // Função para abrir diário para visualização/edição
+  // Função para abrir diário para criar novo ou mostrar opções
   const handleDateClick = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     const diary = Array.isArray(diaries) ? diaries.find((d: any) => d.date === dateStr) : null;
     
-    if (diary) {
-      setSelectedDiary(diary);
-      setIsViewDialogOpen(true);
-      setIsEditing(false);
-    } else {
+    if (!diary) {
+      // Não existe diário, criar novo
       setSelectedDate(date);
       setFormData({
         date: dateStr,
@@ -70,8 +67,10 @@ export default function Diary() {
       });
       setSelectedEmployees([]);
       setSelectedContractors([]);
+      setIsEditMode(false);
       setIsDialogOpen(true);
     }
+    // Se existe diário, não fazer nada aqui - o usuário deve usar os botões específicos
   };
 
   // Função para iniciar edição

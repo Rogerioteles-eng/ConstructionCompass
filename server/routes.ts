@@ -436,7 +436,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         search: req.query.search as string,
       };
       
+      console.log('Employee costs filters:', filters);
       const costs = await storage.getEmployeeCosts(filters);
+      console.log('Employee costs results:', costs.length, 'records');
       res.json(costs);
     } catch (error) {
       console.error("Error fetching employee costs:", error);

@@ -42,7 +42,7 @@ import {
   type InsertWorkDiaryAttendance,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, gte, lte } from "drizzle-orm";
+import { eq, desc, and, sql, gte, lte, or, like } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -431,6 +431,16 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(employees.role, filters.role));
     }
 
+    if (filters?.search && filters.search.trim() !== '') {
+      conditions.push(
+        or(
+          like(employees.name, `%${filters.search}%`),
+          like(employees.role, `%${filters.search}%`),
+          like(projects.name, `%${filters.search}%`)
+        )
+      );
+    }
+
     const query = db
       .select({
         employeeId: employees.id,
@@ -451,7 +461,9 @@ export class DatabaseStorage implements IStorage {
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(workDiaries.date, employees.name);
 
+    console.log('Query conditions count:', conditions.length);
     const results = await query;
+    console.log('Query results count:', results.length);
     
     // Transformar para o formato esperado pelo frontend
     return results.map(result => ({
