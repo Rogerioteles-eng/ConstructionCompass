@@ -241,7 +241,7 @@ export default function EmployeesManagement() {
   }
 
   return (
-    <div className="flex h-screen bg-neutral-50">
+    <div className="flex h-screen bg-background">
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggleAI={() => setAiOpen(!aiOpen)}
@@ -255,8 +255,8 @@ export default function EmployeesManagement() {
         />
         
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="max-w-7xl mx-auto">
+            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
               <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
               <span>/</span>
               <span className="text-gray-900 dark:text-gray-100">Funcionários</span>
@@ -265,32 +265,31 @@ export default function EmployeesManagement() {
             <h1 className="text-2xl font-semibold mb-6">Funcionários</h1>
 
             {/* Estatísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold">{totalEmployees}</div>
-                  <p className="text-sm text-muted-foreground">Total Cadastrados</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
-                  <p className="text-sm text-muted-foreground">Ativos</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">{regularEmployees}</div>
-                  <p className="text-sm text-muted-foreground">Funcionários</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-orange-600">{contractors}</div>
-                  <p className="text-sm text-muted-foreground">Empreiteiros</p>
-                </CardContent>
-              </Card>
-            </div>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Estatísticas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{totalEmployees}</div>
+                    <p className="text-sm text-muted-foreground">Total Cadastrados</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
+                    <p className="text-sm text-muted-foreground">Ativos</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{regularEmployees}</div>
+                    <p className="text-sm text-muted-foreground">Funcionários</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">{contractors}</div>
+                    <p className="text-sm text-muted-foreground">Empreiteiros</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Formulário de Cadastro */}
