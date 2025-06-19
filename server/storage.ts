@@ -88,7 +88,7 @@ export interface IStorage {
   getDashboardStats(): Promise<any>;
 
   // Employee operations
-  getEmployeesByProject(projectId: number): Promise<Employee[]>;
+  getEmployees(): Promise<Employee[]>;
   createEmployee(employee: InsertEmployee): Promise<Employee>;
   updateEmployee(id: number, employee: Partial<InsertEmployee>): Promise<Employee>;
   deleteEmployee(id: number): Promise<void>;

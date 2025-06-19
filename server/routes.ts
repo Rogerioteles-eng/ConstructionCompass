@@ -343,10 +343,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Employee routes
-  app.get('/api/projects/:projectId/employees', isAuthenticated, async (req, res) => {
+  app.get('/api/employees', isAuthenticated, async (req, res) => {
     try {
-      const projectId = parseInt(req.params.projectId);
-      const employees = await storage.getEmployeesByProject(projectId);
+      const employees = await storage.getEmployees();
       res.json(employees);
     } catch (error) {
       console.error("Error fetching employees:", error);
