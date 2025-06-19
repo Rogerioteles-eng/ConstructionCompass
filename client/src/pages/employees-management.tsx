@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertEmployeeSchema, type Employee, type InsertEmployee } from "@shared/schema";
 import { Plus, Edit, Trash2, Search, Filter } from "lucide-react";
+import { Link } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import AIAssistant from "@/components/ai-assistant";
@@ -255,6 +256,13 @@ export default function EmployeesManagement() {
         
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
+            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
+              <span>/</span>
+              <span className="text-gray-900 dark:text-gray-100">Funcionários</span>
+            </nav>
+
+            <h1 className="text-2xl font-semibold mb-6">Funcionários</h1>
 
             {/* Estatísticas */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

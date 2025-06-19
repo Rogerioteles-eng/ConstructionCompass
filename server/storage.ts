@@ -570,6 +570,92 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Photo management operations
+  async getAllDiaryPhotos(): Promise<any[]> {
+    try {
+      const diaries = await db
+        .select({
+          id: workDiaries.id,
+          workId: workDiaries.projectId,
+          date: workDiaries.date,
+          projectName: projects.name,
+          photos: workDiaries.photos,
+        })
+        .from(workDiaries)
+        .innerJoin(projects, eq(workDiaries.projectId, projects.id))
+        .where(sql`${workDiaries.photos} IS NOT NULL AND json_array_length(${workDiaries.photos}) > 0`)
+        .orderBy(desc(workDiaries.date));
+
+      // Flatten photos with individual IDs
+      const allPhotos: any[] = [];
+      let photoId = 1;
+      
+      diaries.forEach(diary => {
+        if (diary.photos && diary.photos.length > 0) {
+          diary.photos.forEach((photoData: string, index: number) => {
+            allPhotos.push({
+              id: photoId++,
+              workId: diary.workId,
+              date: diary.date,
+              projectName: diary.projectName,
+              url: photoData,
+              data: photoData
+            });
+          });
+        }
+      });
+
+      return allPhotos;
+    } catch (error) {
+      console.error("Error fetching all diary photos:", error);
+      throw error;
+    }
+  }
+
+  async getDiaryPhoto(id: number): Promise<any> {
+    try {
+      const photos = await this.getAllDiaryPhotos();
+      return photos.find(photo => photo.id === id);
+    } catch (error) {
+      console.error("Error fetching diary photo:", error);
+      throw error;
+    }
+  }
+
+  async saveDiaryPhoto(photo: any): Promise<any> {
+    // For now, return a mock response since photos are stored in the diary entries
+    return {
+      id: Date.now(),
+      workId: photo.workId,
+      date: photo.date,
+      url: photo.data
+    };
+  }
+
+  async getAllExpenseDocuments(): Promise<any[]> {
+    try {
+      const expensesWithReceipts = await db
+        .select({
+          id: expenses.id,
+          workId: expenses.projectId,
+          date: expenses.date,
+          projectName: projects.name,
+          name: expenses.description,
+          url: expenses.receiptImage,
+          amount: expenses.amount,
+        })
+        .from(expenses)
+        .innerJoin(projects, eq(expenses.projectId, projects.id))
+        .where(sql`${expenses.receiptImage} IS NOT NULL`)
+        .orderBy(desc(expenses.date));
+
+      return expensesWithReceipts;
+    } catch (error) {
+      console.error("Error fetching expense documents:", error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
