@@ -47,6 +47,7 @@ export default function Diary() {
   });
   
   const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>([]);
+  const [selectedContractors, setSelectedContractors] = useState<SelectedEmployee[]>([]);
 
   if (!isAuthenticated) {
     return <div>Por favor, faça login para acessar o diário de obras.</div>;
@@ -102,12 +103,20 @@ export default function Diary() {
       photos: []
     });
     setSelectedEmployees([]);
+    setSelectedContractors([]);
   };
 
   const addEmployee = (employee: Employee) => {
-    const isAlreadySelected = selectedEmployees.some(emp => emp.id === employee.id);
-    if (!isAlreadySelected) {
-      setSelectedEmployees([...selectedEmployees, employee]);
+    if (employee.isContractor) {
+      const isAlreadySelected = selectedContractors.some(emp => emp.id === employee.id);
+      if (!isAlreadySelected) {
+        setSelectedContractors([...selectedContractors, employee]);
+      }
+    } else {
+      const isAlreadySelected = selectedEmployees.some(emp => emp.id === employee.id);
+      if (!isAlreadySelected) {
+        setSelectedEmployees([...selectedEmployees, employee]);
+      }
     }
   };
 
@@ -115,8 +124,29 @@ export default function Diary() {
     setSelectedEmployees(selectedEmployees.filter(emp => emp.id !== employeeId));
   };
 
+  const removeContractor = (contractorId: number) => {
+    setSelectedContractors(selectedContractors.filter(emp => emp.id !== contractorId));
+  };
+
   const calculateTotalCost = () => {
-    return selectedEmployees.reduce((total, emp) => total + emp.dailyRate, 0);
+    const employeeCost = selectedEmployees.reduce((total, emp) => total + emp.dailyRate, 0);
+    const contractorCost = selectedContractors.reduce((total, emp) => total + emp.dailyRate, 0);
+    return employeeCost + contractorCost;
+  };
+
+  // Filtrar funcionários e empreiteiros separadamente
+  const getEmployeesOnly = () => {
+    if (!employees || !Array.isArray(employees)) return [];
+    return employees.filter((emp: Employee) => 
+      !emp.isContractor && !selectedEmployees.some(selected => selected.id === emp.id)
+    );
+  };
+
+  const getContractorsOnly = () => {
+    if (!employees || !Array.isArray(employees)) return [];
+    return employees.filter((emp: Employee) => 
+      emp.isContractor && !selectedContractors.some(selected => selected.id === emp.id)
+    );
   };
 
   const handleSave = () => {
@@ -129,19 +159,28 @@ export default function Diary() {
       return;
     }
 
-    const attendance = selectedEmployees.map(emp => ({
-      employeeId: emp.id,
-      employeeName: emp.name,
-      role: emp.role,
-      dailyRate: emp.dailyRate.toString(),
-      isContractor: emp.isContractor
-    }));
+    const allAttendance = [
+      ...selectedEmployees.map(emp => ({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        role: emp.role,
+        dailyRate: emp.dailyRate.toString(),
+        isContractor: emp.isContractor
+      })),
+      ...selectedContractors.map(emp => ({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        role: emp.role,
+        dailyRate: emp.dailyRate.toString(),
+        isContractor: emp.isContractor
+      }))
+    ];
     
     createDiaryMutation.mutate({
       date: formData.date,
       activities: formData.activities,
       photos: formData.photos,
-      attendance: attendance
+      attendance: allAttendance
     });
   };
 
@@ -263,109 +302,142 @@ export default function Diary() {
                     )}
                   </div>
 
-                  {/* Seleção de Funcionários */}
-                  <div>
-                    <Label>Funcionários Presentes</Label>
-                    <div className="mt-2">
-                      <Select value="" onValueChange={(value) => {
-                        if (!employees || !Array.isArray(employees)) return;
-                        const employee = employees.find((emp: Employee) => emp.id.toString() === value);
-                        if (employee) addEmployee(employee);
-                      }}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecionar funcionário..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {employees && Array.isArray(employees) && employees.length > 0 ? (
-                            employees
-                              .filter((emp: Employee) => !selectedEmployees.some(selected => selected.id === emp.id))
-                              .map((employee: Employee) => (
-                                <SelectItem key={employee.id} value={employee.id.toString()}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>{employee.name}</span>
-                                    <div className="text-sm text-muted-foreground ml-2">
-                                      {employee.role} - R$ {employee.dailyRate}/dia
-                                      {employee.isContractor && (
-                                        <Badge variant="outline" className="ml-1">Empreiteiro</Badge>
-                                      )}
-                                    </div>
-                                  </div>
+                  {/* Seção Funcionários */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-lg font-semibold">Funcionários</Label>
+                      <div className="mt-2 space-y-2">
+                        {/* Campos dinâmicos para funcionários */}
+                        {[...Array(Math.max(1, selectedEmployees.length + 1))].map((_, index) => (
+                          <Select 
+                            key={`employee-${index}`}
+                            value="" 
+                            onValueChange={(value) => {
+                              const employeesOnly = getEmployeesOnly();
+                              const employee = employeesOnly.find((emp: Employee) => emp.id.toString() === value);
+                              if (employee) addEmployee(employee);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={
+                                index < selectedEmployees.length 
+                                  ? `${selectedEmployees[index].name} - ${selectedEmployees[index].role} - R$ ${selectedEmployees[index].dailyRate}/dia`
+                                  : "Selecionar funcionário..."
+                              } />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getEmployeesOnly().length > 0 ? (
+                                getEmployeesOnly().map((employee: Employee) => (
+                                  <SelectItem key={employee.id} value={employee.id.toString()}>
+                                    {employee.name} - {employee.role} - R$ {employee.dailyRate}/dia
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-employees" disabled>
+                                  {index < selectedEmployees.length ? "Funcionário selecionado" : "Nenhum funcionário disponível"}
                                 </SelectItem>
-                              ))
-                          ) : (
-                            <SelectItem value="no-employees" disabled>
-                              {loadingEmployees ? "Carregando..." : "Nenhum funcionário cadastrado"}
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        ))}
+                        
+                        {/* Lista de funcionários selecionados */}
+                        {selectedEmployees.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {selectedEmployees.map((emp) => (
+                              <div key={emp.id} className="flex items-center justify-between p-2 bg-blue-50 rounded text-sm">
+                                <span>{emp.name} - {emp.role} - R$ {emp.dailyRate}/dia</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeEmployee(emp.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Seção Empreiteiros */}
+                    <div>
+                      <Label className="text-lg font-semibold">Empreiteiros</Label>
+                      <div className="mt-2 space-y-2">
+                        {/* Campos dinâmicos para empreiteiros */}
+                        {[...Array(Math.max(1, selectedContractors.length + 1))].map((_, index) => (
+                          <Select 
+                            key={`contractor-${index}`}
+                            value="" 
+                            onValueChange={(value) => {
+                              const contractorsOnly = getContractorsOnly();
+                              const contractor = contractorsOnly.find((emp: Employee) => emp.id.toString() === value);
+                              if (contractor) addEmployee(contractor);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={
+                                index < selectedContractors.length 
+                                  ? `${selectedContractors[index].name} - ${selectedContractors[index].role} - R$ ${selectedContractors[index].dailyRate}/dia`
+                                  : "Selecionar empreiteiro..."
+                              } />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getContractorsOnly().length > 0 ? (
+                                getContractorsOnly().map((contractor: Employee) => (
+                                  <SelectItem key={contractor.id} value={contractor.id.toString()}>
+                                    {contractor.name} - {contractor.role} - R$ {contractor.dailyRate}/dia
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-contractors" disabled>
+                                  {index < selectedContractors.length ? "Empreiteiro selecionado" : "Nenhum empreiteiro disponível"}
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        ))}
+                        
+                        {/* Lista de empreiteiros selecionados */}
+                        {selectedContractors.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {selectedContractors.map((emp) => (
+                              <div key={emp.id} className="flex items-center justify-between p-2 bg-orange-50 rounded text-sm">
+                                <span>{emp.name} - {emp.role} - R$ {emp.dailyRate}/dia</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeContractor(emp.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Funcionários Selecionados */}
-                  {selectedEmployees.length > 0 && (
-                    <div className="space-y-4">
-                      {/* Funcionários */}
-                      {employeesList.length > 0 && (
-                        <div>
-                          <h4 className="font-medium mb-2">Funcionários ({employeesList.length})</h4>
-                          <div className="space-y-2">
-                            {employeesList.map((employee) => (
-                              <div key={employee.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div>
-                                  <div className="font-medium">{employee.name}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {employee.role} - R$ {employee.dailyRate}/dia
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeEmployee(employee.id)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Empreiteiros */}
-                      {contractorsList.length > 0 && (
-                        <div>
-                          <h4 className="font-medium mb-2">Empreiteiros ({contractorsList.length})</h4>
-                          <div className="space-y-2">
-                            {contractorsList.map((contractor) => (
-                              <div key={contractor.id} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <div>
-                                  <div className="font-medium">{contractor.name}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {contractor.role} - R$ {contractor.dailyRate}/dia
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeEmployee(contractor.id)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Total */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <div className="font-medium">
-                          Custo Total do Dia: R$ {calculateTotalCost().toFixed(2)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {selectedEmployees.length} pessoa(s) presente(s)
-                        </div>
+                  {/* Resumo de Custos */}
+                  {(selectedEmployees.length > 0 || selectedContractors.length > 0) && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="font-semibold text-green-800 mb-2">
+                        Custo Total do Dia: R$ {calculateTotalCost().toFixed(2)}
                       </div>
+                      {selectedEmployees.length > 0 && (
+                        <div className="text-sm text-green-700">
+                          Funcionários ({selectedEmployees.length}): R$ {selectedEmployees.reduce((total, emp) => total + emp.dailyRate, 0).toFixed(2)}
+                        </div>
+                      )}
+                      {selectedContractors.length > 0 && (
+                        <div className="text-sm text-green-700">
+                          Empreiteiros ({selectedContractors.length}): R$ {selectedContractors.reduce((total, emp) => total + emp.dailyRate, 0).toFixed(2)}
+                        </div>
+                      )}
                     </div>
                   )}
 
