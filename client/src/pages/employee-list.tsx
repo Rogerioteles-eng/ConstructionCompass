@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertEmployeeSchema } from "@shared/schema";
 import { ArrowLeft, Search, Edit, Phone, FileText, Users, UserCheck, Trash2 } from "lucide-react";
 import { Link } from "wouter";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
+import AIAssistant from "@/components/ai-assistant";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface Employee {
   id: number;
@@ -39,6 +44,9 @@ type FormData = {
 };
 
 export default function EmployeeList() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -47,6 +55,21 @@ export default function EmployeeList() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, authLoading, toast]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(insertEmployeeSchema),
