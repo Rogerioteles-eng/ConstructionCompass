@@ -107,7 +107,7 @@ export const expenses = pgTable("expenses", {
   date: date("date").notNull(),
   description: text("description").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  receiptUrl: varchar("receipt_url"), // URL to uploaded receipt
+  receiptImage: text("receipt_image"), // Base64 encoded image data
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -117,6 +117,7 @@ export const workDiaries = pgTable("work_diaries", {
   projectId: integer("project_id").notNull().references(() => projects.id),
   date: date("date").notNull(),
   activities: text("activities").notNull(),
+  photos: text("photos").array(), // Array of base64 encoded images
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -166,6 +167,7 @@ export const employees = pgTable("employees", {
   name: varchar("name", { length: 255 }).notNull(),
   role: varchar("role", { length: 100 }).notNull(), // pedreiro, servente, pintor, eletricista, etc.
   dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(), // valor da diária
+  isContractor: boolean("is_contractor").notNull().default(false), // distingue empreiteiro de funcionário
   isActive: boolean("is_active").notNull().default(true),
   phone: varchar("phone", { length: 20 }),
   document: varchar("document", { length: 20 }), // CPF ou RG
