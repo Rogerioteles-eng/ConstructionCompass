@@ -14,6 +14,10 @@ import { Calendar, Plus, X, Search, Save, Camera, ArrowLeft, Eye, Edit, Trash2 }
 import PhotoUpload from "@/components/photo-upload";
 import { Badge } from "@/components/ui/badge";
 import DiaryCalendar from "@/components/diary-calendar";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
+import AIAssistant from "@/components/ai-assistant";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface Employee {
   id: number;
@@ -32,7 +36,9 @@ interface SelectedEmployee {
 }
 
 export default function Diary() {
-  const { isAuthenticated } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -44,6 +50,21 @@ export default function Diary() {
   const [selectedDiary, setSelectedDiary] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, authLoading, toast]);
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],

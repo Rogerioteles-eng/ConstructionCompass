@@ -132,7 +132,12 @@ export default function EmployeeList() {
   };
 
   // Get unique roles for filter
-  const uniqueRoles = Array.from(new Set(employees.map(emp => emp.role))).filter(Boolean);
+  const uniqueRoles = employees.reduce((roles: string[], emp) => {
+    if (emp.role && !roles.includes(emp.role)) {
+      roles.push(emp.role);
+    }
+    return roles;
+  }, []);
 
   // Filter employees
   const filteredEmployees = employees.filter((employee) => {
@@ -308,7 +313,7 @@ export default function EmployeeList() {
                         {employee.isContractor ? "Empreiteiro" : "Funcionário"}
                       </Badge>
                     </TableCell>
-                    <TableCell>R$ {parseFloat(employee.dailyRate).toFixed(2)}</TableCell>
+                    <TableCell>R$ {parseFloat(String(employee.dailyRate)).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {employee.phone && <Phone className="w-3 h-3" />}

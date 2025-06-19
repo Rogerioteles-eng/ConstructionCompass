@@ -46,9 +46,17 @@ export default function PhotoUpload({
             onPhotoCapture(base64);
           }
         };
+        reader.onerror = () => {
+          console.error('Erro ao ler arquivo:', file.name);
+        };
         reader.readAsDataURL(file);
+      } else {
+        console.warn('Arquivo não é uma imagem:', file.type);
       }
     });
+    
+    // Limpar o input para permitir selecionar o mesmo arquivo novamente
+    event.target.value = '';
   };
 
   const handleCameraCapture = () => {
