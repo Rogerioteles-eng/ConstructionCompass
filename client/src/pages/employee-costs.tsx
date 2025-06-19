@@ -75,15 +75,9 @@ export default function EmployeeCosts() {
     return matchesSearch && matchesProject && matchesType && matchesRole;
   }) || [];
 
-  // Calcular resumo
-  const uniqueDates = new Set(filteredCosts.map(cost => cost.workDate));
-  const summary: CostSummary = {
-    totalCost: filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0),
-    totalDays: uniqueDates.size,
-    totalEmployees: new Set(filteredCosts.filter(c => !c.isContractor).map(c => c.employeeId)).size,
-    totalContractors: new Set(filteredCosts.filter(c => c.isContractor).map(c => c.employeeId)).size,
-    averageDailyCost: uniqueDates.size > 0 ? filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0) / uniqueDates.size : 0,
-  };
+  // Mostrar resultados apenas quando houver filtros aplicados
+  const hasFilters = startDate || endDate || projectFilter !== "todos" || employeeTypeFilter !== "todos" || roleFilter !== "todos" || searchFilter;
+  const shouldShowResults = hasFilters && filteredCosts.length > 0;
 
   // Listas únicas para filtros
   const uniqueRoles = Array.from(new Set(employeeCosts?.map(cost => cost.role) || []));
@@ -117,72 +111,7 @@ export default function EmployeeCosts() {
         <h1 className="text-3xl font-bold">Custos de Funcionários</h1>
       </div>
 
-      {/* Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <div>
-                <div className="text-2xl font-bold text-green-600">
-                  R$ {summary.totalCost.toFixed(2)}
-                </div>
-                <p className="text-sm text-muted-foreground">Custo Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{summary.totalDays}</div>
-                <p className="text-sm text-muted-foreground">Dias Trabalhados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-purple-600" />
-              <div>
-                <div className="text-2xl font-bold text-purple-600">{summary.totalEmployees}</div>
-                <p className="text-sm text-muted-foreground">Funcionários</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-orange-600" />
-              <div>
-                <div className="text-2xl font-bold text-orange-600">{summary.totalContractors}</div>
-                <p className="text-sm text-muted-foreground">Empreiteiros</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-gray-600" />
-              <div>
-                <div className="text-2xl font-bold text-gray-600">
-                  R$ {summary.averageDailyCost.toFixed(2)}
-                </div>
-                <p className="text-sm text-muted-foreground">Média Diária</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Filtros */}
       <Card>

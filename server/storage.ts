@@ -448,6 +448,13 @@ export class DatabaseStorage implements IStorage {
     role?: string;
     search?: string;
   }): Promise<any[]> {
+    console.log('Employee costs filters:', filters);
+    
+    // Se não há filtros aplicados, retorna array vazio
+    if (!filters || (!filters.startDate && !filters.endDate && !filters.projectId && !filters.employeeType && !filters.role && !filters.search)) {
+      return [];
+    }
+    
     const conditions = [];
 
     if (filters?.projectId) {
@@ -482,6 +489,11 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
+    // Se ainda não há condições após os filtros, retorna array vazio
+    if (conditions.length === 0) {
+      return [];
+    }
+
     const query = db
       .select({
         employeeId: employees.id,
@@ -499,8 +511,8 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(employees, eq(workDiaryAttendance.employeeId, employees.id))
       .innerJoin(workDiaries, eq(workDiaryAttendance.workDiaryId, workDiaries.id))
       .innerJoin(projects, eq(workDiaries.projectId, projects.id))
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(workDiaries.date, employees.name);
+      .where(and(...conditions))
+      .orderBy(desc(workDiaries.date), employees.name);
 
     console.log('Query conditions count:', conditions.length);
     const results = await query;
