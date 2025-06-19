@@ -42,6 +42,7 @@ export default function Diary() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -594,6 +595,81 @@ export default function Diary() {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Lista de Diários Existentes */}
+          {diaries && Array.isArray(diaries) && diaries.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Diários Existentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {diaries.map((diary: any) => (
+                    <div key={diary.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="font-medium">
+                          {new Date(diary.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {diary.activities?.substring(0, 100)}...
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {diary.attendance?.length || 0} funcionário(s) presente(s)
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedDiary(diary);
+                            setIsViewDialogOpen(true);
+                          }}
+                        >
+                          Visualizar
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedDiary(diary);
+                            setFormData({
+                              date: diary.date,
+                              activities: diary.activities || '',
+                              photos: diary.photos || []
+                            });
+                            // Pre-populate selected employees from attendance
+                            if (diary.attendance) {
+                              const employees = diary.attendance.filter((att: any) => !att.isContractor);
+                              const contractors = diary.attendance.filter((att: any) => att.isContractor);
+                              setSelectedEmployees(employees.map((att: any) => ({
+                                id: att.employeeId,
+                                name: att.employeeName,
+                                role: att.role,
+                                dailyRate: Number(att.dailyRate),
+                                isContractor: false
+                              })));
+                              setSelectedContractors(contractors.map((att: any) => ({
+                                id: att.employeeId,
+                                name: att.employeeName,
+                                role: att.role,
+                                dailyRate: Number(att.dailyRate),
+                                isContractor: true
+                              })));
+                            }
+                            setIsEditMode(true);
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          Editar
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Calendário */}
           <DiaryCalendar

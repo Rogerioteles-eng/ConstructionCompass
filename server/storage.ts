@@ -232,15 +232,46 @@ export class DatabaseStorage implements IStorage {
 
   // Work diary operations
   async getWorkDiariesByProject(projectId: number): Promise<any[]> {
-    const diaries = await db.query.workDiaries.findMany({
-      where: eq(workDiaries.projectId, projectId),
-      with: {
-        workers: true,
-        createdByUser: true,
-      },
-      orderBy: desc(workDiaries.date),
-    });
-    return diaries;
+    const diaries = await db
+      .select({
+        id: workDiaries.id,
+        projectId: workDiaries.projectId,
+        date: workDiaries.date,
+        activities: workDiaries.activities,
+        photos: workDiaries.photos,
+        createdBy: workDiaries.createdBy,
+        createdAt: workDiaries.createdAt,
+        updatedAt: workDiaries.updatedAt,
+      })
+      .from(workDiaries)
+      .where(eq(workDiaries.projectId, projectId))
+      .orderBy(desc(workDiaries.date));
+
+    // Para cada diário, buscar os dados de presença
+    const diariesWithAttendance = await Promise.all(
+      diaries.map(async (diary) => {
+        const attendance = await db
+          .select({
+            employeeId: workDiaryAttendance.employeeId,
+            employeeName: employees.name,
+            role: employees.role,
+            isContractor: employees.isContractor,
+            dailyRate: workDiaryAttendance.dailyRate,
+            hoursWorked: workDiaryAttendance.hoursWorked,
+            activities: workDiaryAttendance.activities,
+          })
+          .from(workDiaryAttendance)
+          .innerJoin(employees, eq(workDiaryAttendance.employeeId, employees.id))
+          .where(eq(workDiaryAttendance.workDiaryId, diary.id));
+
+        return {
+          ...diary,
+          attendance,
+        };
+      })
+    );
+
+    return diariesWithAttendance;
   }
 
   async createWorkDiary(diary: InsertWorkDiary): Promise<WorkDiary> {
