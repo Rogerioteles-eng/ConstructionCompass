@@ -251,16 +251,16 @@ export default function EmployeeList() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar por nome, função, telefone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar por nome, função, telefone..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
 
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger>
@@ -298,60 +298,60 @@ export default function EmployeeList() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Employee List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Funcionários ({filteredEmployees.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Função</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Diária</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell className="font-medium">{employee.name}</TableCell>
-                    <TableCell>{employee.role}</TableCell>
-                    <TableCell>
-                      <Badge variant={employee.isContractor ? "secondary" : "default"}>
-                        {employee.isContractor ? "Empreiteiro" : "Funcionário"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>R$ {parseFloat(String(employee.dailyRate)).toFixed(2)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {employee.phone && <Phone className="w-3 h-3" />}
-                        {employee.phone || "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          employee.status === "ativo"
-                            ? "default"
-                            : employee.status === "inativo"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {employee.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
+            {/* Employee List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Funcionários ({filteredEmployees.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Diária</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEmployees.map((employee) => (
+                      <TableRow key={employee.id}>
+                        <TableCell className="font-medium">{employee.name}</TableCell>
+                        <TableCell>{employee.role}</TableCell>
+                        <TableCell>
+                          <Badge variant={employee.isContractor ? "secondary" : "default"}>
+                            {employee.isContractor ? "Empreiteiro" : "Funcionário"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>R$ {parseFloat(String(employee.dailyRate)).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {employee.phone && <Phone className="w-3 h-3" />}
+                            {employee.phone || "-"}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              employee.status === "ativo"
+                                ? "default"
+                                : employee.status === "inativo"
+                                ? "destructive"
+                                : "secondary"
+                            }
+                          >
+                            {employee.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
