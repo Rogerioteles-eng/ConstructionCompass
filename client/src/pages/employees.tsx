@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Edit, Trash2, Phone, IdCard, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,6 +94,7 @@ export default function Employees() {
       name: "",
       role: "",
       dailyRate: "0",
+      isContractor: false,
       isActive: true,
       phone: "",
       document: "",
@@ -221,6 +224,7 @@ export default function Employees() {
       name: employee.name,
       role: employee.role,
       dailyRate: employee.dailyRate,
+      isContractor: employee.isContractor || false,
       phone: employee.phone || "",
       document: employee.document || "",
       isActive: employee.isActive,
@@ -367,6 +371,15 @@ export default function Employees() {
                       />
                     </div>
 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isContractor"
+                        checked={form.watch("isContractor")}
+                        onCheckedChange={(checked) => form.setValue("isContractor", !!checked)}
+                      />
+                      <Label htmlFor="isContractor">É empreiteiro</Label>
+                    </div>
+
                     <div className="flex justify-end space-x-3 pt-4">
                       <Button
                         type="button"
@@ -407,12 +420,12 @@ export default function Employees() {
           ) : (
             <div className="space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Total de Funcionários</p>
+                        <p className="text-sm font-medium text-gray-600">Total</p>
                         <p className="text-3xl font-bold text-gray-900">
                           {Array.isArray(employees) ? employees.length : 0}
                         </p>
@@ -428,17 +441,16 @@ export default function Employees() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Custo Diário Total</p>
+                        <p className="text-sm font-medium text-gray-600">Funcionários</p>
                         <p className="text-3xl font-bold text-gray-900">
-                          {formatCurrency(
-                            Array.isArray(employees) 
-                              ? employees.reduce((sum: number, emp: any) => sum + parseFloat(emp.dailyRate || 0), 0)
-                              : 0
-                          )}
+                          {Array.isArray(employees) 
+                            ? employees.filter((emp: any) => !emp.isContractor).length 
+                            : 0
+                          }
                         </p>
                       </div>
-                      <div className="w-12 h-12 construction-warning rounded-lg flex items-center justify-center">
-                        <DollarSign className="h-6 w-6 text-white" />
+                      <div className="w-12 h-12 construction-success rounded-lg flex items-center justify-center">
+                        <Users className="h-6 w-6 text-white" />
                       </div>
                     </div>
                   </CardContent>
@@ -448,16 +460,36 @@ export default function Employees() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Funcionários Ativos</p>
+                        <p className="text-sm font-medium text-gray-600">Empreiteiros</p>
                         <p className="text-3xl font-bold text-gray-900">
                           {Array.isArray(employees) 
-                            ? employees.filter((emp: any) => emp.isActive).length 
+                            ? employees.filter((emp: any) => emp.isContractor).length 
                             : 0
                           }
                         </p>
                       </div>
-                      <div className="w-12 h-12 construction-success rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 construction-warning rounded-lg flex items-center justify-center">
                         <Users className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Custo Diário</p>
+                        <p className="text-3xl font-bold text-gray-900">
+                          {formatCurrency(
+                            Array.isArray(employees) 
+                              ? employees.reduce((sum: number, emp: any) => sum + parseFloat(emp.dailyRate || 0), 0)
+                              : 0
+                          )}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <DollarSign className="h-6 w-6 text-white" />
                       </div>
                     </div>
                   </CardContent>
