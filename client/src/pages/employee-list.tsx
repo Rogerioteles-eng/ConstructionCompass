@@ -180,35 +180,30 @@ export default function EmployeeList() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/employees">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Users className="w-6 h-6 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Lista de Funcionários</h1>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Total</p>
-                    <p className="text-2xl font-bold">{employees.length}</p>
+    <div className="flex h-screen bg-background">
+      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(true)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Lista de Funcionários" 
+          subtitle="Gestão de funcionários e empreiteiros"
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+        />
+        
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total</p>
+                      <p className="text-2xl font-bold">{employees.length}</p>
+                    </div>
+                    <Users className="w-8 h-8 text-blue-500" />
                   </div>
-                  <Users className="w-8 h-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
             <Card>
               <CardContent className="p-4">
@@ -245,18 +240,17 @@ export default function EmployeeList() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+            </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            {/* Filters */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="w-5 h-5" />
+                  Filtros
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -551,7 +545,11 @@ export default function EmployeeList() {
             )}
           </CardContent>
         </Card>
+          </div>
+        </main>
       </div>
+      
+      <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
     </div>
   );
 }
