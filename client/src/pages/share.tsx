@@ -60,9 +60,6 @@ export default function Share() {
   const { data: images = [], isLoading: imagesLoading } = useQuery<DiaryImage[]>({
     queryKey: ["/api/share/images"],
     enabled: isAuthenticated,
-    onSuccess: (data) => {
-      console.log("Raw images data:", data);
-    }
   });
 
   // Fetch expense documents
@@ -89,13 +86,17 @@ export default function Share() {
         image.photos.forEach((photo, index) => {
           // Only add photo if it's not empty
           if (photo && photo.trim() !== '') {
+            // Parse date correctly - the backend sends YYYY-MM-DD format
+            const [year, month, day] = image.date.split('-');
+            const correctDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            
             acc[projectKey].push({
-              id: `${image.id}_${index}_${Date.now()}`, // Make unique ID
+              id: `${image.id}_${index}_${Math.random()}`, // Make unique ID
               projectName: image.projectName,
               date: image.date,
-              formattedDate: format(dateObj, 'dd/MM/yyyy', { locale: ptBR }),
+              formattedDate: format(correctDate, 'dd/MM/yyyy', { locale: ptBR }),
               url: photo,
-              filename: `${image.projectName}_${format(dateObj, 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
+              filename: `${image.projectName}_${format(correctDate, 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
             });
           }
         });
