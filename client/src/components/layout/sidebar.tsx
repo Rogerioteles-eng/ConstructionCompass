@@ -26,7 +26,6 @@ const navigation = [
   { name: "Gastos", href: "/expenses", icon: Receipt },
   { name: "Diário de Obras", href: "/diary", icon: BookOpen },
   { name: "Funcionários", href: "/employees", icon: Users },
-  { name: "Custos", href: "/employee-costs", icon: DollarSign },
   { name: "Medições", href: "/measurements", icon: Ruler },
   { name: "Cronograma", href: "/schedule", icon: Calendar },
   { name: "Compartilhamento", href: "/share", icon: Share2 },

@@ -235,7 +235,7 @@ export default function Share() {
                     <Card>
                       <CardContent className="p-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                          {groupedImages[selectedProject].map((photo: any) => (
+                          {(groupedImages[selectedProject] || []).map((photo: any) => (
                             <div key={photo.id} className="relative group">
                               <img
                                 src={photo.url}
@@ -313,7 +313,7 @@ export default function Share() {
                     <Card>
                       <CardContent className="p-6">
                         <div className="space-y-3">
-                          {groupedDocuments[selectedProject].map((doc: any) => (
+                          {(groupedDocuments[selectedProject] || []).map((doc: any) => (
                             <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                               <div className="flex items-center gap-3">
                                 <FileText className="h-6 w-6 text-green-500" />
