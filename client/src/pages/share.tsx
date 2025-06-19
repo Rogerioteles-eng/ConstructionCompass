@@ -93,7 +93,7 @@ export default function Share() {
   }, {});
 
   // Group documents by project and date
-  const groupedDocuments = documents.reduce((acc: any, doc: ExpenseDocument) => {
+  const groupedDocuments = (documents as ExpenseDocument[]).reduce((acc: any, doc: ExpenseDocument) => {
     const projectKey = doc.projectName;
     const dateKey = format(new Date(doc.date), 'dd/MM/yyyy', { locale: ptBR });
     
@@ -269,7 +269,7 @@ export default function Share() {
                                     <FileText className="h-5 w-5 text-gray-500" />
                                     <div>
                                       <p className="font-medium">{doc.name}</p>
-                                      <p className="text-sm text-gray-500">R$ {doc.amount.toFixed(2)}</p>
+                                      <p className="text-sm text-gray-500">R$ {Number(doc.amount).toFixed(2)}</p>
                                     </div>
                                   </div>
                                   <Button
