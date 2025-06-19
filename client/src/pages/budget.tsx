@@ -100,6 +100,7 @@ export default function Budget() {
       });
     },
     onError: (error) => {
+      console.error("Budget creation error:", error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -113,7 +114,7 @@ export default function Budget() {
       }
       toast({
         title: "Erro",
-        description: "Falha ao criar orçamento",
+        description: `Falha ao criar orçamento: ${error.message}`,
         variant: "destructive",
       });
     },
