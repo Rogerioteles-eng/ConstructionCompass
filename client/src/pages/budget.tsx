@@ -21,7 +21,7 @@ import AIAssistant from "@/components/ai-assistant";
 import BudgetTree from "@/components/budget-tree";
 import { z } from "zod";
 
-const budgetFormSchema = insertBudgetSchema;
+const budgetFormSchema = insertBudgetSchema.omit({ projectId: true });
 type BudgetFormData = z.infer<typeof budgetFormSchema>;
 
 export default function Budget() {
@@ -249,6 +249,16 @@ export default function Budget() {
   });
 
   const onSubmitBudget = (data: BudgetFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Selected project:", selectedProject);
+    if (!selectedProject) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma obra primeiro",
+        variant: "destructive",
+      });
+      return;
+    }
     createBudgetMutation.mutate(data);
   };
 
@@ -367,7 +377,14 @@ export default function Budget() {
                         <DialogHeader>
                           <DialogTitle>Novo Orçamento</DialogTitle>
                         </DialogHeader>
-                        <form onSubmit={form.handleSubmit(onSubmitBudget)} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(onSubmitBudget, (errors) => {
+                          console.log("Form validation errors:", errors);
+                          toast({
+                            title: "Erro de validação",
+                            description: "Verifique os campos obrigatórios",
+                            variant: "destructive",
+                          });
+                        })} className="space-y-4">
                           <div>
                             <Label htmlFor="name">Nome do Orçamento *</Label>
                             <Input

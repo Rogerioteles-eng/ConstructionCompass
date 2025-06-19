@@ -443,14 +443,18 @@ export default function Expenses() {
                         )}
                       </div>
 
-                      <div>
-                        <Label htmlFor="receiptUrl">URL do Comprovante</Label>
-                        <Input
-                          id="receiptUrl"
-                          {...form.register("receiptUrl")}
-                          placeholder="https://..."
-                        />
-                      </div>
+                      <PhotoUpload
+                        label="Comprovante/Nota Fiscal"
+                        onPhotoCapture={(base64) => {
+                          setReceiptImage(base64);
+                          form.setValue("receiptImage", base64);
+                        }}
+                        onRemove={() => {
+                          setReceiptImage("");
+                          form.setValue("receiptImage", "");
+                        }}
+                        currentPhoto={receiptImage || form.watch("receiptImage")}
+                      />
 
                       <div className="flex justify-end space-x-3 pt-4">
                         <Button

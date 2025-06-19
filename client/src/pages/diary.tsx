@@ -19,6 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import AIAssistant from "@/components/ai-assistant";
+import PhotoUpload from "@/components/photo-upload";
 import { z } from "zod";
 
 const diaryFormSchema = insertWorkDiarySchema.omit({ createdBy: true, projectId: true }).extend({
@@ -33,6 +34,7 @@ export default function Diary() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [dateFilter, setDateFilter] = useState("");
+  const [diaryPhotos, setDiaryPhotos] = useState<string[]>([]);
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
