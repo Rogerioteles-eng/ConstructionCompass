@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Calendar, Plus, X, Search, Save, Camera, ArrowLeft } from "lucide-react";
+import { Calendar, Plus, X, Search, Save, Camera, ArrowLeft, Eye, Edit, Trash2 } from "lucide-react";
 import PhotoUpload from "@/components/photo-upload";
 import { Badge } from "@/components/ui/badge";
 import DiaryCalendar from "@/components/diary-calendar";
@@ -628,6 +628,95 @@ export default function Diary() {
             onDateSelect={handleDateClick}
             datesWithEntries={datesWithEntries}
           />
+
+          {/* Diálogo de Opções para Diário Existente */}
+          <Dialog open={isOptionsDialogOpen} onOpenChange={setIsOptionsDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  Diário de {selectedDate.toLocaleDateString('pt-BR')}
+                </DialogTitle>
+              </DialogHeader>
+              
+              {selectedDiary && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">Atividades:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedDiary.activities?.substring(0, 100)}...
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {selectedDiary.attendance?.length || 0} funcionário(s) presente(s)
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={() => {
+                        setIsOptionsDialogOpen(false);
+                        setIsViewDialogOpen(true);
+                      }}
+                      className="w-full justify-start"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Visualizar Diário
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setFormData({
+                          date: selectedDiary.date,
+                          activities: selectedDiary.activities || '',
+                          photos: selectedDiary.photos || []
+                        });
+                        // Pre-populate employees from attendance
+                        if (selectedDiary.attendance) {
+                          const employees = selectedDiary.attendance.filter((att: any) => !att.isContractor);
+                          const contractors = selectedDiary.attendance.filter((att: any) => att.isContractor);
+                          setSelectedEmployees(employees.map((att: any) => ({
+                            id: att.employeeId,
+                            name: att.employeeName,
+                            role: att.role,
+                            dailyRate: Number(att.dailyRate),
+                            isContractor: false
+                          })));
+                          setSelectedContractors(contractors.map((att: any) => ({
+                            id: att.employeeId,
+                            name: att.employeeName,
+                            role: att.role,
+                            dailyRate: Number(att.dailyRate),
+                            isContractor: true
+                          })));
+                        }
+                        setIsOptionsDialogOpen(false);
+                        setIsEditMode(true);
+                        setIsDialogOpen(true);
+                      }}
+                      className="w-full justify-start"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar Diário
+                    </Button>
+                    
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        if (confirm('Tem certeza que deseja excluir este diário? Esta ação não pode ser desfeita.')) {
+                          deleteDiaryMutation.mutate(selectedDiary.id);
+                        }
+                      }}
+                      disabled={deleteDiaryMutation.isPending}
+                      className="w-full justify-start"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {deleteDiaryMutation.isPending ? "Excluindo..." : "Excluir Diário"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Diálogo de Visualização de Diário */}
           <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
