@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
+import AIAssistant from "@/components/ai-assistant";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface EmployeeCost {
   employeeId: number;
@@ -25,12 +31,31 @@ interface EmployeeCost {
 }
 
 export default function EmployeeCosts() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [projectFilter, setProjectFilter] = useState("todos");
   const [employeeTypeFilter, setEmployeeTypeFilter] = useState("todos");
   const [roleFilter, setRoleFilter] = useState("todos");
   const [employeeFilter, setEmployeeFilter] = useState("todos");
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, authLoading, toast]);
 
   // Verificar se há filtros aplicados
   const hasFilters = Boolean(startDate || endDate || projectFilter !== "todos" || employeeTypeFilter !== "todos" || roleFilter !== "todos" || employeeFilter !== "todos");
@@ -114,17 +139,34 @@ export default function EmployeeCosts() {
   // Calcular total geral
   const totalGeral = filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0);
 
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <Link href="/employees">
-          <Button variant="outline" className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Gestão de Funcionários
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Custos de Funcionários</h1>
-      </div>
+    <div className="flex min-h-screen bg-neutral-50 dark:from-gray-900 dark:to-gray-800">
+      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(!aiOpen)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Custos de Funcionários" 
+          subtitle="Análise de custos por funcionário e período"
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+        />
+        
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-50 dark:bg-gray-900 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
+              <span>/</span>
+              <Link href="/employees" className="hover:text-blue-600 dark:hover:text-blue-400">Funcionários</Link>
+              <span>/</span>
+              <span className="text-gray-900 dark:text-gray-100">Custos</span>
+            </nav>
 
       {/* Filtros */}
       <Card>
@@ -298,6 +340,14 @@ export default function EmployeeCosts() {
           )}
         </CardContent>
       </Card>
+          </div>
+        </main>
+      </div>
+      
+      <AIAssistant 
+        isOpen={aiOpen} 
+        onClose={() => setAiOpen(false)} 
+      />
     </div>
   );
 }
