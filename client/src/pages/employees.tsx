@@ -64,6 +64,113 @@ const CONSTRUCTION_ROLES = [
   "Outros"
 ];
 
+// Employee Table Component
+function EmployeeTable({ employees, onEdit, onDelete }: { 
+  employees: any[], 
+  onEdit: (employee: any) => void, 
+  onDelete: (id: number) => void 
+}) {
+  if (!Array.isArray(employees) || employees.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Nenhum funcionário encontrado
+        </h3>
+        <p className="text-gray-500">
+          Nenhum funcionário nesta categoria
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Função</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Diária</TableHead>
+            <TableHead>Telefone</TableHead>
+            <TableHead>Documento</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-center">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {employees.map((employee: any) => (
+            <TableRow key={employee.id}>
+              <TableCell className="font-medium">
+                {employee.name}
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">
+                  {employee.role}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant={employee.isContractor ? "secondary" : "default"}>
+                  {employee.isContractor ? "Empreiteiro" : "Funcionário"}
+                </Badge>
+              </TableCell>
+              <TableCell className="font-medium">
+                {formatCurrency(parseFloat(employee.dailyRate))}
+              </TableCell>
+              <TableCell>
+                {employee.phone ? (
+                  <div className="flex items-center text-sm">
+                    <Phone className="h-3 w-3 mr-1" />
+                    {formatPhone(employee.phone)}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {employee.document ? (
+                  <div className="flex items-center text-sm">
+                    <IdCard className="h-3 w-3 mr-1" />
+                    {employee.document}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Badge 
+                  variant={employee.isActive ? "default" : "destructive"}
+                >
+                  {employee.isActive ? "Ativo" : "Inativo"}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex justify-center space-x-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onEdit(employee)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onDelete(employee.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export default function Employees() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiOpen, setAiOpen] = useState(false);
@@ -109,7 +216,7 @@ export default function Employees() {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: [`/api/projects/${selectedProject}/employees`],
     enabled: isAuthenticated && !!selectedProject,
-  });
+  }) as { data: any[], isLoading: boolean };
 
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: EmployeeFormData) => {
@@ -502,99 +609,49 @@ export default function Employees() {
                   <CardTitle>Lista de Funcionários</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {isLoading ? (
-                    <div className="text-center py-8">
-                      <p>Carregando funcionários...</p>
-                    </div>
-                  ) : !Array.isArray(employees) || employees.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Nenhum funcionário cadastrado
-                      </h3>
-                      <p className="text-gray-500 mb-4">
-                        Cadastre o primeiro funcionário desta obra
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Função</TableHead>
-                            <TableHead>Diária</TableHead>
-                            <TableHead>Telefone</TableHead>
-                            <TableHead>Documento</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-center">Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {employees.map((employee: any) => (
-                            <TableRow key={employee.id}>
-                              <TableCell className="font-medium">
-                                {employee.name}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline">
-                                  {employee.role}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                {formatCurrency(parseFloat(employee.dailyRate))}
-                              </TableCell>
-                              <TableCell>
-                                {employee.phone ? (
-                                  <div className="flex items-center text-sm">
-                                    <Phone className="h-3 w-3 mr-1" />
-                                    {formatPhone(employee.phone)}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {employee.document ? (
-                                  <div className="flex items-center text-sm">
-                                    <IdCard className="h-3 w-3 mr-1" />
-                                    {employee.document}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant={employee.isActive ? "default" : "destructive"}
-                                >
-                                  {employee.isActive ? "Ativo" : "Inativo"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <div className="flex justify-center space-x-1">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleEdit(employee)}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleDelete(employee.id)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
+                  <Tabs defaultValue="all" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="all">Todos</TabsTrigger>
+                      <TabsTrigger value="employees">Funcionários</TabsTrigger>
+                      <TabsTrigger value="contractors">Empreiteiros</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="all" className="mt-6">
+                      {isLoading ? (
+                        <div className="text-center py-8">
+                          <p>Carregando funcionários...</p>
+                        </div>
+                      ) : !Array.isArray(employees) || employees.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Nenhum funcionário cadastrado
+                          </h3>
+                          <p className="text-gray-500 mb-4">
+                            Cadastre o primeiro funcionário desta obra
+                          </p>
+                        </div>
+                      ) : (
+                        <EmployeeTable employees={employees} onEdit={handleEdit} onDelete={handleDelete} />
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="employees" className="mt-6">
+                      <EmployeeTable 
+                        employees={Array.isArray(employees) ? employees.filter((emp: any) => !emp.isContractor) : []} 
+                        onEdit={handleEdit} 
+                        onDelete={handleDelete} 
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="contractors" className="mt-6">
+                      <EmployeeTable 
+                        employees={Array.isArray(employees) ? employees.filter((emp: any) => emp.isContractor) : []} 
+                        onEdit={handleEdit} 
+                        onDelete={handleDelete} 
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </div>
