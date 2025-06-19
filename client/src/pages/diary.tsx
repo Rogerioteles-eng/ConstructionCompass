@@ -364,20 +364,20 @@ export default function Diary() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Diário de Obras</h1>
-        </div>
-        <Button variant="outline" onClick={() => window.location.href = '/'}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao Menu Principal
-        </Button>
-      </div>
-
-      {/* Seletor de Projeto */}
-      <Card className="mb-6">
+    <div className="flex h-screen bg-background">
+      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(true)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Diário de Obras" 
+          subtitle="Controle de atividades e presença"
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+        />
+        
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Seletor de Projeto */}
+            <Card className="mb-6">
         <CardHeader>
           <CardTitle>Selecionar Projeto</CardTitle>
         </CardHeader>
@@ -830,6 +830,11 @@ export default function Diary() {
           </Dialog>
         </>
       )}
+          </div>
+        </main>
+      </div>
+      
+      <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
     </div>
   );
 }
