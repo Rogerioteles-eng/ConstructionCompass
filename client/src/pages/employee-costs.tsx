@@ -30,24 +30,30 @@ export default function EmployeeCosts() {
   const [projectFilter, setProjectFilter] = useState("todos");
   const [employeeTypeFilter, setEmployeeTypeFilter] = useState("todos");
   const [roleFilter, setRoleFilter] = useState("todos");
-  const [searchFilter, setSearchFilter] = useState("");
+  const [employeeFilter, setEmployeeFilter] = useState("todos");
 
   // Verificar se há filtros aplicados
-  const hasFilters = Boolean(startDate || endDate || projectFilter !== "todos" || employeeTypeFilter !== "todos" || roleFilter !== "todos" || searchFilter);
+  const hasFilters = Boolean(startDate || endDate || projectFilter !== "todos" || employeeTypeFilter !== "todos" || roleFilter !== "todos" || employeeFilter !== "todos");
 
   // Buscar projetos para o filtro
   const { data: projects } = useQuery({
     queryKey: ["/api/projects"],
   });
 
-  // Buscar custos apenas quando há filtros
+  // Buscar todos os custos para gerar as listas de filtros dinâmicas
+  const { data: allEmployeeCosts } = useQuery({
+    queryKey: ["/api/employee-costs?startDate=2025-01-01&endDate=2025-12-31"],
+    enabled: true,
+  });
+
+  // Buscar custos filtrados apenas quando há filtros de data/obra
   const queryParams = new URLSearchParams();
   if (startDate) queryParams.append('startDate', startDate);
   if (endDate) queryParams.append('endDate', endDate);
   if (projectFilter !== "todos") queryParams.append('projectId', projectFilter);
   if (employeeTypeFilter !== "todos") queryParams.append('employeeType', employeeTypeFilter);
   if (roleFilter !== "todos") queryParams.append('role', roleFilter);
-  if (searchFilter) queryParams.append('search', searchFilter);
+  if (employeeFilter !== "todos") queryParams.append('employeeId', employeeFilter);
 
   const { data: employeeCosts, isLoading } = useQuery({
     queryKey: [`/api/employee-costs?${queryParams.toString()}`],
@@ -57,8 +63,36 @@ export default function EmployeeCosts() {
   // Filtrar resultados no frontend se necessário
   const filteredCosts: EmployeeCost[] = (employeeCosts as EmployeeCost[]) || [];
 
-  // Listas únicas para filtros
-  const uniqueRoles = Array.from(new Set(filteredCosts.map(cost => cost.role)));
+  // Gerar listas dinâmicas baseadas nos filtros aplicados progressivamente
+  let dataForFilters: EmployeeCost[] = (allEmployeeCosts as EmployeeCost[]) || [];
+
+  // Aplicar filtros progressivamente para construir as listas
+  if (startDate || endDate) {
+    dataForFilters = dataForFilters.filter(cost => {
+      if (startDate && cost.workDate < startDate) return false;
+      if (endDate && cost.workDate > endDate) return false;
+      return true;
+    });
+  }
+
+  if (projectFilter !== "todos") {
+    dataForFilters = dataForFilters.filter(cost => cost.projectId === parseInt(projectFilter));
+  }
+
+  if (employeeTypeFilter !== "todos") {
+    if (employeeTypeFilter === "funcionario") {
+      dataForFilters = dataForFilters.filter(cost => !cost.isContractor);
+    } else if (employeeTypeFilter === "empreiteiro") {
+      dataForFilters = dataForFilters.filter(cost => cost.isContractor);
+    }
+  }
+
+  // Listas únicas para filtros baseadas nos dados filtrados
+  const uniqueRoles = Array.from(new Set(dataForFilters.map(cost => cost.role)));
+  const uniqueEmployees = Array.from(new Set(dataForFilters.map(cost => ({
+    id: cost.employeeId,
+    name: cost.employeeName
+  })).filter((emp, index, arr) => arr.findIndex(e => e.id === emp.id) === index)));
 
   // Agrupar por data
   const costsByDate = filteredCosts.reduce((acc, cost) => {
@@ -76,6 +110,9 @@ export default function EmployeeCosts() {
   }, {} as Record<string, { date: string; totalCost: number; entries: EmployeeCost[] }>);
 
   const sortedDates = Object.keys(costsByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  // Calcular total geral
+  const totalGeral = filteredCosts.reduce((sum, cost) => sum + cost.totalCost, 0);
 
   return (
     <div className="space-y-6">
@@ -168,13 +205,20 @@ export default function EmployeeCosts() {
             </div>
 
             <div>
-              <Label htmlFor="search">Buscar</Label>
-              <Input
-                id="search"
-                placeholder="Nome, função ou obra..."
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-              />
+              <Label>Funcionário</Label>
+              <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o funcionário" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os funcionários</SelectItem>
+                  {uniqueEmployees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id.toString()}>
+                      {employee.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -183,7 +227,14 @@ export default function EmployeeCosts() {
       {/* Resultados */}
       <Card>
         <CardHeader>
-          <CardTitle>Resultados</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Resultados</span>
+            {hasFilters && filteredCosts.length > 0 && (
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                Total Geral: R$ {totalGeral.toFixed(2)}
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (

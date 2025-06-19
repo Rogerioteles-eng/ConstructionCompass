@@ -446,7 +446,7 @@ export class DatabaseStorage implements IStorage {
     projectId?: number;
     employeeType?: string;
     role?: string;
-    search?: string;
+    employeeId?: number;
   }): Promise<any[]> {
     console.log('Employee costs filters:', filters);
     
