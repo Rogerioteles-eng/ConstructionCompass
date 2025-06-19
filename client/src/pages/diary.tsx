@@ -792,22 +792,33 @@ export default function Diary() {
                   )}
 
                   {/* Fotos */}
-                  {selectedDiary.photos && selectedDiary.photos.length > 0 && (
-                    <div>
-                      <Label className="text-base font-semibold">Fotos</Label>
+                  <div>
+                    <Label className="text-base font-semibold">Fotos</Label>
+                    <div className="mt-2 text-sm text-muted-foreground mb-2">
+                      Debug: {selectedDiary.photos ? `${selectedDiary.photos.length} fotos encontradas` : 'Nenhuma foto encontrada'}
+                    </div>
+                    {selectedDiary.photos && Array.isArray(selectedDiary.photos) && selectedDiary.photos.length > 0 ? (
                       <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4">
                         {selectedDiary.photos.map((photo: string, index: number) => (
-                          <div key={index} className="aspect-video bg-muted rounded-lg overflow-hidden">
+                          <div key={index} className="aspect-video bg-muted rounded-lg overflow-hidden border">
                             <img
                               src={photo}
                               alt={`Foto ${index + 1}`}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error('Erro ao carregar imagem:', photo);
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
                             />
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="mt-2 p-4 bg-muted rounded-lg text-center text-muted-foreground">
+                        Nenhuma foto foi adicionada a este registro
+                      </div>
+                    )}
+                  </div>
 
                   {/* Botões */}
                   <div className="flex gap-2">

@@ -33,6 +33,7 @@ type EmployeeFormData = z.infer<typeof employeeFormSchema>;
 export default function EmployeesManagement() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiOpen, setAiOpen] = useState(false);
+  // Layout update
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -77,21 +78,8 @@ export default function EmployeesManagement() {
   });
 
   // Queries
-  const { data: employees, isLoading } = useQuery({
+  const { data: employees = [], isLoading } = useQuery({
     queryKey: ["/api/employees"],
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-    },
   });
 
   // Mutations
