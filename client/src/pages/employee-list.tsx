@@ -179,9 +179,17 @@ export default function EmployeeList() {
     return matchesSearch && matchesType && matchesStatus && matchesRole;
   });
 
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(true)} />
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(!aiOpen)} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
@@ -190,7 +198,7 @@ export default function EmployeeList() {
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
