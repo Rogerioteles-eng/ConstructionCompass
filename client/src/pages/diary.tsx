@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Calendar, Plus, X, Search, Save, Camera } from "lucide-react";
+import { Calendar, Plus, X, Search, Save, Camera, ArrowLeft } from "lucide-react";
 import PhotoUpload from "@/components/photo-upload";
 import { Badge } from "@/components/ui/badge";
 import DiaryCalendar from "@/components/diary-calendar";
@@ -39,6 +39,9 @@ export default function Diary() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedDiary, setSelectedDiary] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -48,6 +51,55 @@ export default function Diary() {
   
   const [selectedEmployees, setSelectedEmployees] = useState<SelectedEmployee[]>([]);
   const [selectedContractors, setSelectedContractors] = useState<SelectedEmployee[]>([]);
+
+  // Função para abrir diário para visualização/edição
+  const handleDateClick = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const diary = diaries?.find((d: any) => d.date === dateStr);
+    
+    if (diary) {
+      setSelectedDiary(diary);
+      setIsViewDialogOpen(true);
+      setIsEditing(false);
+    } else {
+      setSelectedDate(date);
+      setFormData({
+        date: dateStr,
+        activities: "",
+        photos: []
+      });
+      setSelectedEmployees([]);
+      setSelectedContractors([]);
+      setIsDialogOpen(true);
+    }
+  };
+
+  // Função para iniciar edição
+  const handleEdit = () => {
+    if (selectedDiary) {
+      setFormData({
+        date: selectedDiary.date,
+        activities: selectedDiary.activities || "",
+        photos: selectedDiary.photos || []
+      });
+      
+      // Carregar funcionários do diário
+      const diaryEmployees = selectedDiary.attendance?.map((att: any) => ({
+        id: att.employeeId,
+        name: att.employeeName,
+        role: att.role,
+        dailyRate: parseFloat(att.dailyRate || 0),
+        isContractor: att.isContractor
+      })) || [];
+      
+      setSelectedEmployees(diaryEmployees.filter((emp: any) => !emp.isContractor));
+      setSelectedContractors(diaryEmployees.filter((emp: any) => emp.isContractor));
+      
+      setIsEditing(true);
+      setIsViewDialogOpen(false);
+      setIsDialogOpen(true);
+    }
+  };
 
   if (!isAuthenticated) {
     return <div>Por favor, faça login para acessar o diário de obras.</div>;
@@ -198,9 +250,15 @@ export default function Diary() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Calendar className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Diário de Obras</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Diário de Obras</h1>
+        </div>
+        <Button variant="outline" onClick={() => window.location.href = '/'}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar ao Menu Principal
+        </Button>
       </div>
 
       {/* Seletor de Projeto */}
@@ -471,9 +529,96 @@ export default function Diary() {
           {/* Calendário */}
           <DiaryCalendar
             selectedDate={selectedDate}
-            onDateSelect={(date) => setSelectedDate(date)}
+            onDateSelect={handleDateClick}
             datesWithEntries={datesWithEntries}
           />
+
+          {/* Diálogo de Visualização de Diário */}
+          <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  Diário de Obras - {selectedDiary?.date && new Date(selectedDiary.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                </DialogTitle>
+              </DialogHeader>
+              
+              {selectedDiary && (
+                <div className="space-y-6">
+                  {/* Atividades */}
+                  <div>
+                    <Label className="text-base font-semibold">Atividades Realizadas</Label>
+                    <div className="mt-2 p-4 bg-muted rounded-lg">
+                      <p className="whitespace-pre-wrap">{selectedDiary.activities || "Nenhuma atividade registrada"}</p>
+                    </div>
+                  </div>
+
+                  {/* Funcionários Presentes */}
+                  {selectedDiary.attendance && selectedDiary.attendance.length > 0 && (
+                    <div>
+                      <Label className="text-base font-semibold">Funcionários Presentes</Label>
+                      <div className="mt-2 space-y-2">
+                        {selectedDiary.attendance.map((att: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <Badge variant={att.isContractor ? "secondary" : "default"}>
+                                {att.isContractor ? "Empreiteiro" : "Funcionário"}
+                              </Badge>
+                              <span className="font-medium">{att.employeeName}</span>
+                              <span className="text-muted-foreground">({att.role})</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold">R$ {Number(att.dailyRate || 0).toFixed(2)}</div>
+                              <div className="text-sm text-muted-foreground">Diária</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custo Total */}
+                  {selectedDiary.attendance && selectedDiary.attendance.length > 0 && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="font-semibold text-green-800">
+                        Custo Total do Dia: R$ {selectedDiary.attendance.reduce((total: number, att: any) => total + Number(att.dailyRate || 0), 0).toFixed(2)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fotos */}
+                  {selectedDiary.photos && selectedDiary.photos.length > 0 && (
+                    <div>
+                      <Label className="text-base font-semibold">Fotos</Label>
+                      <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {selectedDiary.photos.map((photo: string, index: number) => (
+                          <div key={index} className="aspect-video bg-muted rounded-lg overflow-hidden">
+                            <img
+                              src={photo}
+                              alt={`Foto ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botões */}
+                  <div className="flex gap-2">
+                    <Button onClick={handleEdit} className="flex-1">
+                      Editar Registro
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsViewDialogOpen(false)}
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

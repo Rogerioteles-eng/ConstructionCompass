@@ -324,8 +324,8 @@ export default function EmployeeCosts() {
                             </TableCell>
                             <TableCell>{cost.projectName}</TableCell>
                             <TableCell>{cost.hoursWorked}h</TableCell>
-                            <TableCell>R$ {cost.dailyRate.toFixed(2)}</TableCell>
-                            <TableCell className="font-medium">R$ {cost.totalCost.toFixed(2)}</TableCell>
+                            <TableCell>R$ {Number(cost.dailyRate || 0).toFixed(2)}</TableCell>
+                            <TableCell className="font-medium">R$ {Number(cost.totalCost || 0).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
