@@ -68,7 +68,7 @@ export default function Share() {
     enabled: isAuthenticated,
   });
 
-  // Group images by project only
+  // Group images by project only  
   const groupedImages = (images as DiaryImage[]).reduce((acc: any, image: DiaryImage) => {
     const projectKey = image.projectName;
     
@@ -76,18 +76,27 @@ export default function Share() {
       acc[projectKey] = [];
     }
     
-    // Only add photos if they exist
-    if (image.photos && Array.isArray(image.photos)) {
-      image.photos.forEach((photo, index) => {
-        acc[projectKey].push({
-          id: `${image.id}_${index}`,
-          projectName: image.projectName,
-          date: image.date,
-          formattedDate: format(new Date(image.date), 'dd/MM/yyyy', { locale: ptBR }),
-          url: photo,
-          filename: `${image.projectName}_${format(new Date(image.date), 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
+    // Only add photos if they exist and are valid
+    if (image.photos && Array.isArray(image.photos) && image.photos.length > 0) {
+      // Ensure we have a valid date
+      const dateObj = new Date(image.date);
+      const isValidDate = dateObj instanceof Date && !isNaN(dateObj.getTime());
+      
+      if (isValidDate) {
+        image.photos.forEach((photo, index) => {
+          // Only add photo if it's not empty
+          if (photo && photo.trim() !== '') {
+            acc[projectKey].push({
+              id: `${image.id}_${index}_${Date.now()}`, // Make unique ID
+              projectName: image.projectName,
+              date: image.date,
+              formattedDate: format(dateObj, 'dd/MM/yyyy', { locale: ptBR }),
+              url: photo,
+              filename: `${image.projectName}_${format(dateObj, 'dd-MM-yyyy')}_foto_${index + 1}.jpg`
+            });
+          }
         });
-      });
+      }
     }
     
     return acc;
