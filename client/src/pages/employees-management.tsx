@@ -229,69 +229,66 @@ export default function EmployeesManagement() {
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
+          title="Gestão de Funcionários"
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onToggleAI={() => setAiOpen(!aiOpen)}
         />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
           <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestão de Funcionários</h1>
+
+            {/* Estatísticas */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold">{totalEmployees}</div>
+                  <p className="text-sm text-muted-foreground">Total Cadastrados</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
+                  <p className="text-sm text-muted-foreground">Ativos</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-blue-600">{regularEmployees}</div>
+                  <p className="text-sm text-muted-foreground">Funcionários</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-orange-600">{contractors}</div>
+                  <p className="text-sm text-muted-foreground">Empreiteiros</p>
+                </CardContent>
+              </Card>
             </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{totalEmployees}</div>
-            <p className="text-sm text-muted-foreground">Total Cadastrados</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
-            <p className="text-sm text-muted-foreground">Ativos</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{regularEmployees}</div>
-            <p className="text-sm text-muted-foreground">Funcionários</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">{contractors}</div>
-            <p className="text-sm text-muted-foreground">Empreiteiros</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Formulário de Cadastro */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              {editingEmployee ? "Editar Funcionário" : "Novo Funcionário"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Digite o nome..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Formulário de Cadastro */}
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    {editingEmployee ? "Editar Funcionário" : "Novo Funcionário"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome Completo</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Digite o nome..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                 <FormField
                   control={form.control}
@@ -333,7 +330,7 @@ export default function EmployeesManagement() {
                     <FormItem>
                       <FormLabel>Telefone</FormLabel>
                       <FormControl>
-                        <Input placeholder="(11) 99999-9999" {...field} />
+                        <Input placeholder="(11) 99999-9999" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -347,7 +344,7 @@ export default function EmployeesManagement() {
                     <FormItem>
                       <FormLabel>Documento (CPF/RG)</FormLabel>
                       <FormControl>
-                        <Input placeholder="000.000.000-00" {...field} />
+                        <Input placeholder="000.000.000-00" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
