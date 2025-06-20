@@ -2,12 +2,14 @@ import { Link, useLocation } from "wouter";
 import { Building2, Settings, DollarSign, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import ContextualAITooltip from "@/components/contextual-ai-tooltip";
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  onOpenAI?: () => void;
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({ children, onOpenAI }: MainLayoutProps) {
   const [location] = useLocation();
 
   const navItems = [
@@ -65,6 +67,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
+      
+      {onOpenAI && (
+        <ContextualAITooltip onOpenAI={onOpenAI} />
+      )}
     </div>
   );
 }

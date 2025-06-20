@@ -167,7 +167,7 @@ export default function Share() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout onOpenAI={() => setAiOpen(true)}>
       <ProjectLayout projectId={projectId}>
         <div className="space-y-6">
           <Card>

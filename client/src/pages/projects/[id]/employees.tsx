@@ -14,7 +14,7 @@ export default function Employees() {
   const projectId = params.id || "1";
 
   return (
-    <MainLayout>
+    <MainLayout onOpenAI={() => setAiOpen(true)}>
       <ProjectLayout projectId={projectId}>
         <div className="space-y-6">
             <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">

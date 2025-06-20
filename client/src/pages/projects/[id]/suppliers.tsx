@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck } from "lucide-react";
 
 export default function Suppliers() {
+  const [aiOpen, setAiOpen] = useState(false);
   const params = useParams();
   const projectId = params.id || "1";
 
   return (
-    <MainLayout>
+    <MainLayout onOpenAI={() => setAiOpen(true)}>
       <ProjectLayout projectId={projectId}>
         <Card>
           <CardHeader>
@@ -25,6 +26,8 @@ export default function Suppliers() {
             </div>
           </CardContent>
         </Card>
+        
+        <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
       </ProjectLayout>
     </MainLayout>
   );

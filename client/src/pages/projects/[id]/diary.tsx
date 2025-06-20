@@ -381,7 +381,7 @@ export default function Diary() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout onOpenAI={() => setAiOpen(true)}>
       <ProjectLayout projectId={projectId.toString()}>
         <div className="space-y-6">
           <Card>
