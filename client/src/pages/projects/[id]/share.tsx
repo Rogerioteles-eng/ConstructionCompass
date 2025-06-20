@@ -184,8 +184,6 @@ export default function Share() {
             </CardContent>
           </Card>
 
-            <h1 className="text-2xl font-semibold mb-6">Compartilhamento</h1>
-
             <Tabs 
               value={activeTab} 
               onValueChange={(value) => {
