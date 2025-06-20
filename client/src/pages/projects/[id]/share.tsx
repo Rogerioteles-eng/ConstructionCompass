@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { saveAs } from "file-saver";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/layouts/MainLayout";
+import ProjectLayout from "@/layouts/ProjectLayout";
 import AIAssistant from "@/components/ai-assistant";
 import { Link } from "wouter";
 
@@ -35,13 +36,14 @@ interface ExpenseDocument {
 }
 
 export default function Share() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("images");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const params = useParams();
+  const projectId = params.id || "1";
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -165,26 +167,22 @@ export default function Share() {
   }
 
   return (
-    <div className="flex h-screen bg-neutral-50 dark:bg-gray-900">
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onToggleAI={() => setAiOpen(!aiOpen)}
-      />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title="Compartilhamento"
-          subtitle="Organize e compartilhe fotos e documentos"
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        />
-        
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto">
-            <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
-              <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
-              <span>/</span>
-              <span className="text-gray-900 dark:text-gray-100">Compartilhamento</span>
-            </nav>
+    <MainLayout>
+      <ProjectLayout projectId={projectId}>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Share2 className="h-5 w-5" />
+                Compartilhamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-gray-600 mb-4">
+                Organize e compartilhe fotos e documentos do projeto
+              </div>
+            </CardContent>
+          </Card>
 
             <h1 className="text-2xl font-semibold mb-6">Compartilhamento</h1>
 
@@ -365,11 +363,7 @@ export default function Share() {
                 )}
               </TabsContent>
             </Tabs>
-          </div>
-        </main>
-      </div>
-
-      <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
+        </div>
       
       {/* Photo Viewer Modal */}
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
@@ -398,6 +392,9 @@ export default function Share() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      
+      <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
+      </ProjectLayout>
+    </MainLayout>
   );
 }

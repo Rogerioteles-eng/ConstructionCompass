@@ -1,32 +1,22 @@
 import { useState } from "react";
+import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Search, DollarSign } from "lucide-react";
 import { Link } from "wouter";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/layouts/MainLayout";
+import ProjectLayout from "@/layouts/ProjectLayout";
 import AIAssistant from "@/components/ai-assistant";
 
 export default function Employees() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiOpen, setAiOpen] = useState(false);
+  const params = useParams();
+  const projectId = params.id || "1";
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:from-gray-900 dark:to-gray-800">
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onToggleAI={() => setAiOpen(!aiOpen)}
-      />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title="Funcionários"
-          subtitle="Cadastre e gerencie funcionários e empreiteiros"
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-50 dark:bg-gray-900 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+    <MainLayout>
+      <ProjectLayout projectId={projectId}>
+        <div className="space-y-6">
             <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
               <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
               <span>/</span>
@@ -82,14 +72,13 @@ export default function Employees() {
                 </Link>
               </CardContent>
             </Card>
-          </div>
-        </main>
-      </div>
-      
-      <AIAssistant 
-        isOpen={aiOpen} 
-        onClose={() => setAiOpen(false)} 
-      />
-    </div>
+        </div>
+        
+        <AIAssistant 
+          isOpen={aiOpen} 
+          onClose={() => setAiOpen(false)} 
+        />
+      </ProjectLayout>
+    </MainLayout>
   );
 }
