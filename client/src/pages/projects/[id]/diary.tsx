@@ -133,7 +133,7 @@ export default function Diary() {
     try {
       const response = await fetch(photoUrl);
       const blob = await response.blob();
-      const projectName = Array.isArray(projects) ? projects.find((p: any) => p.id === selectedProjectId)?.name || "Projeto" : "Projeto";
+      const projectName = "Projeto";
       const date = selectedDiary?.date || new Date().toISOString().split('T')[0];
       const fileName = `${projectName}_${date}_foto_${index + 1}.jpg`;
       saveAs(blob, fileName);
@@ -156,7 +156,7 @@ export default function Diary() {
   const handleExportPDF = () => {
     if (!selectedDiary) return;
 
-    const projectName = Array.isArray(projects) ? projects.find((p: any) => p.id === selectedProjectId)?.name || "Projeto" : "Projeto";
+    const projectName = "Projeto";
     const date = new Date(selectedDiary.date + 'T00:00:00').toLocaleDateString('pt-BR');
     const totalCost = selectedDiary.attendance?.reduce((total: number, att: any) => total + Number(att.dailyRate || 0), 0) || 0;
 
@@ -226,13 +226,8 @@ export default function Diary() {
     return <div>Por favor, faça login para acessar o diário de obras.</div>;
   }
 
-  const { data: projects, isLoading: loadingProjects } = useQuery({
-    queryKey: ["/api/projects"],
-  });
-
   const { data: diaries, isLoading: loadingDiaries } = useQuery({
-    queryKey: [`/api/projects/${selectedProjectId}/diaries`],
-    enabled: !!selectedProjectId,
+    queryKey: [`/api/projects/${projectId}/diaries`],
   });
 
   const { data: employees, isLoading: loadingEmployees } = useQuery({
@@ -247,13 +242,11 @@ export default function Diary() {
 
   const createDiaryMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!selectedProjectId) throw new Error("Projeto não selecionado");
-      return await apiRequest("POST", `/api/projects/${selectedProjectId}/diaries`, data);
+      return await apiRequest("POST", `/api/projects/${projectId}/diaries`, data);
     },
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Registro salvo com sucesso!" });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${selectedProjectId}/diaries`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/diaries`] });
       setIsDialogOpen(false);
       resetForm();
     },
@@ -272,8 +265,7 @@ export default function Diary() {
     },
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Diário excluído com sucesso!" });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${selectedProjectId}/diaries`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/diaries`] });
       setIsOptionsDialogOpen(false);
     },
     onError: (error: any) => {
@@ -854,13 +846,17 @@ export default function Diary() {
               )}
             </DialogContent>
           </Dialog>
-        </>
-      )}
-          </div>
-        </main>
-      </div>
-      
-      <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
-    </div>
+
+          {/* Calendário */}
+          <DiaryCalendar
+            selectedDate={selectedDate}
+            onDateSelect={handleDateClick}
+            datesWithEntries={datesWithEntries}
+          />
+        </div>
+        
+        <AIAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
+      </ProjectLayout>
+    </MainLayout>
   );
 }
