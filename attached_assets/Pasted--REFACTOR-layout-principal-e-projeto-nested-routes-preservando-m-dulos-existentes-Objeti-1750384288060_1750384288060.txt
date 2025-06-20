@@ -1,0 +1,117 @@
+### REFACTOR: layout principal e projeto (nested routes), preservando módulos existentes
+
+**Objetivo:** Criar `MainLayout`, `ProjectLayout`, rotas aninhadas e placeholders para novos módulos, **sem alterar** o conteúdo de `src/pages/projects/[id]/diary.tsx`, `employees.tsx` e `share.tsx`.
+
+---
+
+1. **Layout Principal**  
+   - Crie `src/layouts/MainLayout.tsx` com:
+     ```tsx
+     import { Outlet, Link } from 'react-router-dom';
+     export default function MainLayout() {
+       return (
+         <div>
+           <header>
+             <nav>
+               <Link to="/projects">Obras</Link>
+               <Link to="/manage">Gerenciar</Link>
+               <Link to="/finances">Finanças</Link>
+               <Link to="/reports">Relatórios</Link>
+             </nav>
+           </header>
+           <main><Outlet/></main>
+         </div>
+       );
+     }
+     ```
+2. **Layout de Projeto**  
+   - Crie `src/layouts/ProjectLayout.tsx` com:
+     ```tsx
+     import { Outlet, Link, useParams } from 'react-router-dom';
+     export default function ProjectLayout() {
+       const { id } = useParams<'id'>();
+       return (
+         <div>
+           <header>
+             <h2>Obra {id}</h2>
+             <nav>
+               <Link to="diary">Diário de Obras</Link>
+               <Link to="employees">Funcionários</Link>
+               <Link to="share">Compartilhamento</Link>
+               <Link to="suppliers">Fornecedores</Link>
+               <Link to="quotations">Mapas de Cotações</Link>
+               <Link to="registers">Registros</Link>
+             </nav>
+           </header>
+           <main><Outlet/></main>
+         </div>
+       );
+     }
+     ```
+3. **Rotas Aninhadas**  
+   - No `App.tsx`, ajuste para usar:
+     ```tsx
+     import { Routes, Route } from 'react-router-dom';
+     import MainLayout from './layouts/MainLayout';
+     import ProjectLayout from './layouts/ProjectLayout';
+     import ProjectsPage from './pages/ProjectsPage';
+     import ManagePage from './pages/ManagePage';
+     import Finances from './pages/Finances';
+     import Reports from './pages/Reports';
+     import Diary from './pages/projects/[id]/diary';
+     import Employees from './pages/projects/[id]/employees';
+     import Share from './pages/projects/[id]/share';
+     // componentes novos (placeholders)
+     import Suppliers from './pages/projects/[id]/suppliers';
+     import Quotations from './pages/projects/[id]/quotations';
+     import Registers from './pages/projects/[id]/registers';
+
+     function App() {
+       return (
+         <Routes>
+           <Route path="/" element={<MainLayout />}>
+             <Route index element={<ProjectsPage />} />
+             <Route path="projects" element={<ProjectsPage />} />
+             <Route path="projects/:id" element={<ProjectLayout />}>
+               <Route path="diary" element={<Diary />} />
+               <Route path="employees" element={<Employees />} />
+               <Route path="share" element={<Share />} />
+               <Route path="suppliers" element={<Suppliers />} />
+               <Route path="quotations" element={<Quotations />} />
+               <Route path="registers" element={<Registers />} />
+             </Route>
+             <Route path="manage" element={<ManagePage />} />
+             <Route path="finances" element={<Finances />} />
+             <Route path="reports" element={<Reports />} />
+           </Route>
+         </Routes>
+       );
+     }
+     export default App;
+     ```
+4. **Placeholders para Novos Módulos**  
+   - Em `src/pages/projects/[id]/`, crie:
+     - `suppliers.tsx`
+     - `quotations.tsx`
+     - `registers.tsx`
+   - Cada um exporta um componente simples:
+     ```tsx
+     export default function ModuleName() {
+       return <div>ModuleName</div>;
+     }
+     ```
+   - **Não alterar** `diary.tsx`, `employees.tsx` e `share.tsx`.
+
+5. **Menu “Gerenciar” Global (opcional)**  
+   - Se usar `/manage`, crie `src/pages/ManagePage.tsx` com links para:
+     - `/manage/suppliers`
+     - `/manage/employees`
+     - `/manage/quotations`
+     - `/manage/registers`
+
+---
+
+📋 **Resultado:**  
+- Navegação principal e de projeto configuradas.  
+- Módulos existentes preservados.  
+- Placeholders para novos módulos prontos para receber formulários e lógica.
