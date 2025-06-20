@@ -3,6 +3,7 @@ import ProjectLayout from "@/layouts/ProjectLayout";
 import { useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck } from "lucide-react";
+import AIAssistant from "@/components/ai-assistant";
 
 export default function Suppliers() {
   const [aiOpen, setAiOpen] = useState(false);
