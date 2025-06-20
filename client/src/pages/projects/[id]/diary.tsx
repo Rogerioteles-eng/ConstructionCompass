@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,8 +16,8 @@ import { saveAs } from "file-saver";
 import PhotoUpload from "@/components/photo-upload";
 import { Badge } from "@/components/ui/badge";
 import DiaryCalendar from "@/components/diary-calendar";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
+import MainLayout from "@/layouts/MainLayout";
+import ProjectLayout from "@/layouts/ProjectLayout";
 import AIAssistant from "@/components/ai-assistant";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -37,13 +38,12 @@ interface SelectedEmployee {
 }
 
 export default function Diary() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [aiOpen, setAiOpen] = useState(false);
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const params = useParams();
+  const projectId = params.id ? parseInt(params.id) : 1;
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -389,41 +389,20 @@ export default function Diary() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar isOpen={sidebarOpen} onToggleAI={() => setAiOpen(true)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title="Diário de Obras" 
-          subtitle="Controle de atividades e presença"
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
-        />
-        
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Seletor de Projeto */}
-            <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Selecionar Projeto</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedProjectId?.toString() || ""} onValueChange={(value) => setSelectedProjectId(parseInt(value))}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um projeto" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.isArray(projects) && projects.map((project: any) => (
-                <SelectItem key={project.id} value={project.id.toString()}>
-                  {project.name} - {project.address}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      {selectedProjectId && (
-        <>
+    <MainLayout>
+      <ProjectLayout projectId={projectId.toString()}>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Diário de Obras</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-gray-600 mb-4">
+                Registre as atividades diárias e presença dos funcionários
+              </div>
+            </CardContent>
+          </Card>
+          
           {/* Botões para Novo Registro e Visualizar Existentes */}
           <div className="mb-6 space-y-4">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
