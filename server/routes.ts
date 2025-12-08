@@ -1,7 +1,8 @@
+import { isAuthenticated } from "./middlewares/auth.middleware";
+import { setupAuth } from "./setupAuth";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { parseConstructionCommand, transcribeAudio, analyzeImage } from "./openai";
 import multer from "multer";
 import { insertProjectSchema, insertBudgetSchema, insertBudgetStageSchema, insertBudgetItemSchema, insertBudgetSubitemSchema, insertExpenseSchema, insertWorkDiarySchema, insertWorkDiaryWorkerSchema, insertMeasurementSchema, insertScheduleItemSchema, insertEmployeeSchema, insertWorkDiaryAttendanceSchema } from "@shared/schema";
