@@ -13,6 +13,9 @@ import {
   projectCollaborators,
   employees,
   workDiaryAttendance,
+  suppliers,
+  quotations,
+  registers,
   type User,
   type UpsertUser,
   type Project,
@@ -40,12 +43,18 @@ import {
   type InsertEmployee,
   type WorkDiaryAttendance,
   type InsertWorkDiaryAttendance,
+  type Supplier,
+  type InsertSupplier,
+  type Quotation,
+  type InsertQuotation,
+  type Register,
+  type InsertRegister,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, gte, lte, or, like, isNotNull } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations - mandatory for Replit Auth
+  // User operations
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
 
@@ -113,10 +122,30 @@ export interface IStorage {
   // Sharing operations
   getAllWorkDiariesWithPhotos(): Promise<any[]>;
   getAllExpensesWithReceipts(): Promise<any[]>;
+
+  // Supplier operations
+  getSuppliersByProject(projectId: number): Promise<Supplier[]>;
+  createSupplier(supplier: InsertSupplier): Promise<Supplier>;
+  updateSupplier(id: number, supplier: Partial<InsertSupplier>): Promise<Supplier>;
+  deleteSupplier(id: number): Promise<void>;
+
+  // Quotation operations
+  getQuotationsByProject(projectId: number): Promise<Quotation[]>;
+  createQuotation(quotation: InsertQuotation): Promise<Quotation>;
+  updateQuotation(id: number, quotation: Partial<InsertQuotation>): Promise<Quotation>;
+  deleteQuotation(id: number): Promise<void>;
+
+  // Register operations
+  getRegistersByProject(projectId: number): Promise<Register[]>;
+  createRegister(register: InsertRegister): Promise<Register>;
+  deleteRegister(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations - mandatory for Replit Auth
+
+  // ============================================
+  // USER OPERATIONS
+  // ============================================
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -128,16 +157,15 @@ export class DatabaseStorage implements IStorage {
       .values(userData)
       .onConflictDoUpdate({
         target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
+        set: { ...userData, updatedAt: new Date() },
       })
       .returning();
     return user;
   }
 
-  // Project operations
+  // ============================================
+  // PROJECT OPERATIONS
+  // ============================================
   async getProjects(): Promise<Project[]> {
     return await db.select().from(projects).orderBy(desc(projects.createdAt));
   }
@@ -161,7 +189,9 @@ export class DatabaseStorage implements IStorage {
     return updatedProject;
   }
 
-  // Budget operations
+  // ============================================
+  // BUDGET OPERATIONS
+  // ============================================
   async getBudgetsByProject(projectId: number): Promise<Budget[]> {
     return await db.select().from(budgets).where(eq(budgets.projectId, projectId));
   }
@@ -189,7 +219,6 @@ export class DatabaseStorage implements IStorage {
     return budget;
   }
 
-  // Budget structure operations
   async createBudgetStage(stage: InsertBudgetStage): Promise<BudgetStage> {
     const [newStage] = await db.insert(budgetStages).values(stage).returning();
     return newStage;
@@ -201,23 +230,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBudgetSubitem(subitem: InsertBudgetSubitem): Promise<BudgetSubitem> {
-    // Calculate total price
     const totalPrice = Number(subitem.quantity) * Number(subitem.unitPrice);
     const subitemWithTotal = { ...subitem, totalPrice: totalPrice.toString() };
-    
     const [newSubitem] = await db.insert(budgetSubitems).values(subitemWithTotal).returning();
     return newSubitem;
   }
 
   async updateBudgetSubitem(id: number, subitem: Partial<InsertBudgetSubitem>): Promise<BudgetSubitem> {
-    // Recalculate total if quantity or unit price changed
     if (subitem.quantity !== undefined || subitem.unitPrice !== undefined) {
       const [existing] = await db.select().from(budgetSubitems).where(eq(budgetSubitems.id, id));
       const quantity = subitem.quantity !== undefined ? Number(subitem.quantity) : Number(existing.quantity);
       const unitPrice = subitem.unitPrice !== undefined ? Number(subitem.unitPrice) : Number(existing.unitPrice);
       subitem.totalPrice = (quantity * unitPrice).toString();
     }
-
     const [updatedSubitem] = await db
       .update(budgetSubitems)
       .set({ ...subitem, updatedAt: new Date() })
@@ -226,9 +251,15 @@ export class DatabaseStorage implements IStorage {
     return updatedSubitem;
   }
 
-  // Expense operations
+  // ============================================
+  // EXPENSE OPERATIONS
+  // ============================================
   async getExpensesByProject(projectId: number): Promise<Expense[]> {
-    return await db.select().from(expenses).where(eq(expenses.projectId, projectId)).orderBy(desc(expenses.date));
+    return await db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.projectId, projectId))
+      .orderBy(desc(expenses.date));
   }
 
   async createExpense(expense: InsertExpense): Promise<Expense> {
@@ -236,24 +267,16 @@ export class DatabaseStorage implements IStorage {
     return newExpense;
   }
 
-  // Work diary operations
+  // ============================================
+  // WORK DIARY OPERATIONS
+  // ============================================
   async getWorkDiariesByProject(projectId: number): Promise<any[]> {
     const diaries = await db
-      .select({
-        id: workDiaries.id,
-        projectId: workDiaries.projectId,
-        date: workDiaries.date,
-        activities: workDiaries.activities,
-        photos: workDiaries.photos,
-        createdBy: workDiaries.createdBy,
-        createdAt: workDiaries.createdAt,
-        updatedAt: workDiaries.updatedAt,
-      })
+      .select()
       .from(workDiaries)
       .where(eq(workDiaries.projectId, projectId))
       .orderBy(desc(workDiaries.date));
 
-    // Para cada diário, buscar os dados de presença
     const diariesWithAttendance = await Promise.all(
       diaries.map(async (diary) => {
         const attendance = await db
@@ -269,14 +292,9 @@ export class DatabaseStorage implements IStorage {
           .from(workDiaryAttendance)
           .innerJoin(employees, eq(workDiaryAttendance.employeeId, employees.id))
           .where(eq(workDiaryAttendance.workDiaryId, diary.id));
-
-        return {
-          ...diary,
-          attendance,
-        };
+        return { ...diary, attendance };
       })
     );
-
     return diariesWithAttendance;
   }
 
@@ -290,23 +308,33 @@ export class DatabaseStorage implements IStorage {
     return await db.insert(workDiaryWorkers).values(workersWithDiaryId).returning();
   }
 
-  // Measurement operations
+  // ============================================
+  // MEASUREMENT OPERATIONS
+  // ============================================
   async getMeasurementsByProject(projectId: number): Promise<Measurement[]> {
-    return await db.select().from(measurements).where(eq(measurements.projectId, projectId)).orderBy(desc(measurements.date));
+    return await db
+      .select()
+      .from(measurements)
+      .where(eq(measurements.projectId, projectId))
+      .orderBy(desc(measurements.date));
   }
 
   async createMeasurement(measurement: InsertMeasurement): Promise<Measurement> {
-    // Calculate total amount
     const totalAmount = Number(measurement.executedQuantity) * Number(measurement.unitPrice);
     const measurementWithTotal = { ...measurement, totalAmount: totalAmount.toString() };
-    
     const [newMeasurement] = await db.insert(measurements).values(measurementWithTotal).returning();
     return newMeasurement;
   }
 
-  // Schedule operations
+  // ============================================
+  // SCHEDULE OPERATIONS
+  // ============================================
   async getScheduleByProject(projectId: number): Promise<ScheduleItem[]> {
-    return await db.select().from(scheduleItems).where(eq(scheduleItems.projectId, projectId)).orderBy(scheduleItems.startDate);
+    return await db
+      .select()
+      .from(scheduleItems)
+      .where(eq(scheduleItems.projectId, projectId))
+      .orderBy(scheduleItems.startDate);
   }
 
   async createScheduleItem(item: InsertScheduleItem): Promise<ScheduleItem> {
@@ -323,12 +351,14 @@ export class DatabaseStorage implements IStorage {
     return updatedItem;
   }
 
-  // Dashboard statistics
+  // ============================================
+  // DASHBOARD STATISTICS
+  // ============================================
   async getDashboardStats(): Promise<any> {
     const [activeProjects] = await db
       .select({ count: sql<number>`count(*)` })
       .from(projects)
-      .where(eq(projects.status, 'execution'));
+      .where(eq(projects.status, "execution"));
 
     const [totalBudget] = await db
       .select({ total: sql<number>`coalesce(sum(${budgetSubitems.totalPrice}), 0)` })
@@ -357,22 +387,26 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Employee operations
+  // ============================================
+  // EMPLOYEE OPERATIONS
+  // ============================================
   async getEmployees(): Promise<Employee[]> {
-    return await db.select().from(employees)
-      .orderBy(employees.name);
+    return await db.select().from(employees).orderBy(employees.name);
   }
 
   async createEmployee(employee: InsertEmployee): Promise<Employee> {
-    const [newEmployee] = await db.insert(employees).values({
-      name: employee.name,
-      role: employee.role,
-      dailyRate: employee.dailyRate.toString(),
-      isContractor: employee.isContractor || false,
-      phone: employee.phone,
-      document: employee.document,
-      status: employee.status || "ativo"
-    }).returning();
+    const [newEmployee] = await db
+      .insert(employees)
+      .values({
+        name: employee.name,
+        role: employee.role,
+        dailyRate: employee.dailyRate.toString(),
+        isContractor: employee.isContractor || false,
+        phone: employee.phone,
+        document: employee.document,
+        status: employee.status || "ativo",
+      })
+      .returning();
     return newEmployee;
   }
 
@@ -381,7 +415,8 @@ export class DatabaseStorage implements IStorage {
     if (updateData.dailyRate !== undefined) {
       updateData.dailyRate = updateData.dailyRate.toString();
     }
-    const [updatedEmployee] = await db.update(employees)
+    const [updatedEmployee] = await db
+      .update(employees)
       .set(updateData)
       .where(eq(employees.id, id))
       .returning();
@@ -392,19 +427,14 @@ export class DatabaseStorage implements IStorage {
     await db.delete(employees).where(eq(employees.id, id));
   }
 
-  // Work diary attendance operations
+  // ============================================
+  // WORK DIARY ATTENDANCE OPERATIONS
+  // ============================================
   async getWorkDiaryAttendance(workDiaryId: number): Promise<WorkDiaryAttendance[]> {
-    return await db.select({
-      id: workDiaryAttendance.id,
-      workDiaryId: workDiaryAttendance.workDiaryId,
-      employeeId: workDiaryAttendance.employeeId,
-      hoursWorked: workDiaryAttendance.hoursWorked,
-      dailyRate: workDiaryAttendance.dailyRate,
-      activities: workDiaryAttendance.activities,
-      createdAt: workDiaryAttendance.createdAt,
-    })
-    .from(workDiaryAttendance)
-    .where(eq(workDiaryAttendance.workDiaryId, workDiaryId));
+    return await db
+      .select()
+      .from(workDiaryAttendance)
+      .where(eq(workDiaryAttendance.workDiaryId, workDiaryId));
   }
 
   async addWorkDiaryAttendance(attendance: InsertWorkDiaryAttendance[]): Promise<WorkDiaryAttendance[]> {
@@ -419,19 +449,20 @@ export class DatabaseStorage implements IStorage {
     await db.delete(workDiaries).where(eq(workDiaries.id, id));
   }
 
+  // ============================================
+  // EMPLOYEE COST TRACKING
+  // ============================================
   async getEmployeeCostsByProject(projectId: number): Promise<Record<number, { totalCost: number; workDays: number }>> {
     const costs = await db
       .select({
         employeeId: workDiaryAttendance.employeeId,
         dailyRate: workDiaryAttendance.dailyRate,
-        workDiaryId: workDiaryAttendance.workDiaryId,
       })
       .from(workDiaryAttendance)
       .innerJoin(workDiaries, eq(workDiaryAttendance.workDiaryId, workDiaries.id))
       .where(eq(workDiaries.projectId, projectId));
 
     const result: Record<number, { totalCost: number; workDays: number }> = {};
-    
     costs.forEach(cost => {
       const employeeId = cost.employeeId;
       if (!result[employeeId]) {
@@ -440,7 +471,6 @@ export class DatabaseStorage implements IStorage {
       result[employeeId].totalCost += Number(cost.dailyRate);
       result[employeeId].workDays += 1;
     });
-
     return result;
   }
 
@@ -452,47 +482,36 @@ export class DatabaseStorage implements IStorage {
     role?: string;
     employeeId?: number;
   }): Promise<any[]> {
-    console.log('Employee costs filters:', filters);
-    
-    // Se não há filtros aplicados, retorna array vazio
     if (!filters || (!filters.startDate && !filters.endDate && !filters.projectId && !filters.employeeType && !filters.role && !filters.employeeId)) {
       return [];
     }
-    
+
     const conditions = [];
 
     if (filters?.projectId) {
       conditions.push(eq(workDiaries.projectId, filters.projectId));
     }
-
     if (filters?.startDate) {
       conditions.push(sql`${workDiaries.date} >= ${filters.startDate}`);
     }
-
     if (filters?.endDate) {
       conditions.push(sql`${workDiaries.date} <= ${filters.endDate}`);
     }
-
-    if (filters?.employeeType === 'funcionario') {
+    if (filters?.employeeType === "funcionario") {
       conditions.push(eq(employees.isContractor, false));
-    } else if (filters?.employeeType === 'empreiteiro') {
+    } else if (filters?.employeeType === "empreiteiro") {
       conditions.push(eq(employees.isContractor, true));
     }
-
     if (filters?.role) {
       conditions.push(eq(employees.role, filters.role));
     }
-
     if (filters?.employeeId) {
-      conditions.push(eq(employees.id, parseInt(filters.employeeId.toString())));
+      conditions.push(eq(employees.id, Number(filters.employeeId)));
     }
 
-    // Se ainda não há condições após os filtros, retorna array vazio
-    if (conditions.length === 0) {
-      return [];
-    }
+    if (conditions.length === 0) return [];
 
-    const query = db
+    const results = await db
       .select({
         employeeId: employees.id,
         employeeName: employees.name,
@@ -502,8 +521,6 @@ export class DatabaseStorage implements IStorage {
         workDate: workDiaries.date,
         projectId: workDiaries.projectId,
         projectName: projects.name,
-        totalCost: workDiaryAttendance.dailyRate,
-        hoursWorked: sql<number>`8`
       })
       .from(workDiaryAttendance)
       .innerJoin(employees, eq(workDiaryAttendance.employeeId, employees.id))
@@ -512,150 +529,126 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions))
       .orderBy(desc(workDiaries.date), employees.name);
 
-    console.log('Query conditions count:', conditions.length);
-    const results = await query;
-    console.log('Query results count:', results.length);
-    
-    // Transformar para o formato esperado pelo frontend
     return results.map(result => ({
       ...result,
       totalCost: Number(result.dailyRate || 0),
-      hoursWorked: 8 // Sempre 8 horas pois é diária
+      hoursWorked: 8,
     }));
   }
 
-  // Sharing operations
+  // ============================================
+  // SHARING OPERATIONS
+  // ============================================
   async getAllWorkDiariesWithPhotos(): Promise<any[]> {
-    try {
-      const diaries = await db
-        .select({
-          id: workDiaries.id,
-          date: workDiaries.date,
-          projectId: workDiaries.projectId,
-          projectName: projects.name,
-          photos: workDiaries.photos,
-        })
-        .from(workDiaries)
-        .innerJoin(projects, eq(workDiaries.projectId, projects.id))
-        .where(sql`${workDiaries.photos} IS NOT NULL AND array_length(${workDiaries.photos}, 1) > 0`)
-        .orderBy(desc(workDiaries.date));
+    const diaries = await db
+      .select({
+        id: workDiaries.id,
+        date: workDiaries.date,
+        projectId: workDiaries.projectId,
+        projectName: projects.name,
+        photos: workDiaries.photos,
+      })
+      .from(workDiaries)
+      .innerJoin(projects, eq(workDiaries.projectId, projects.id))
+      .where(sql`${workDiaries.photos} IS NOT NULL AND array_length(${workDiaries.photos}, 1) > 0`)
+      .orderBy(desc(workDiaries.date));
 
-      // Return only entries that actually have photos
-      return diaries.filter(diary => diary.photos && Array.isArray(diary.photos) && diary.photos.length > 0);
-    } catch (error) {
-      console.error("Error fetching diary images:", error);
-      throw error;
-    }
+    return diaries.filter(d => d.photos && Array.isArray(d.photos) && d.photos.length > 0);
   }
 
   async getAllExpensesWithReceipts(): Promise<any[]> {
-    try {
-      const expensesWithReceipts = await db
-        .select({
-          id: expenses.id,
-          date: expenses.date,
-          projectId: expenses.projectId,
-          projectName: projects.name,
-          description: expenses.description,
-          receipt: expenses.receiptImage,
-          amount: expenses.amount,
-        })
-        .from(expenses)
-        .innerJoin(projects, eq(expenses.projectId, projects.id))
-        .where(sql`${expenses.receiptImage} IS NOT NULL`)
-        .orderBy(desc(expenses.date));
-
-      return expensesWithReceipts;
-    } catch (error) {
-      console.error("Error fetching expense documents:", error);
-      throw error;
-    }
+    return await db
+      .select({
+        id: expenses.id,
+        date: expenses.date,
+        projectId: expenses.projectId,
+        projectName: projects.name,
+        description: expenses.description,
+        receipt: expenses.receiptImage,
+        amount: expenses.amount,
+      })
+      .from(expenses)
+      .innerJoin(projects, eq(expenses.projectId, projects.id))
+      .where(sql`${expenses.receiptImage} IS NOT NULL`)
+      .orderBy(desc(expenses.date));
   }
 
-  // Photo management operations
-  async getAllDiaryPhotos(): Promise<any[]> {
-    try {
-      const diaries = await db
-        .select({
-          id: workDiaries.id,
-          workId: workDiaries.projectId,
-          date: workDiaries.date,
-          projectName: projects.name,
-          photos: workDiaries.photos,
-        })
-        .from(workDiaries)
-        .innerJoin(projects, eq(workDiaries.projectId, projects.id))
-        .where(sql`${workDiaries.photos} IS NOT NULL AND array_length(${workDiaries.photos}, 1) > 0`)
-        .orderBy(desc(workDiaries.date));
-
-      // Flatten photos with individual IDs
-      const allPhotos: any[] = [];
-      let photoId = 1;
-      
-      diaries.forEach(diary => {
-        if (diary.photos && diary.photos.length > 0) {
-          diary.photos.forEach((photoData: string, index: number) => {
-            allPhotos.push({
-              id: photoId++,
-              workId: diary.workId,
-              date: diary.date,
-              projectName: diary.projectName,
-              url: photoData,
-              data: photoData
-            });
-          });
-        }
-      });
-
-      return allPhotos;
-    } catch (error) {
-      console.error("Error fetching all diary photos:", error);
-      throw error;
-    }
+  // ============================================
+  // SUPPLIER OPERATIONS
+  // ============================================
+  async getSuppliersByProject(projectId: number): Promise<Supplier[]> {
+    return await db
+      .select()
+      .from(suppliers)
+      .where(eq(suppliers.projectId, projectId))
+      .orderBy(suppliers.name);
   }
 
-  async getDiaryPhoto(id: number): Promise<any> {
-    try {
-      const photos = await this.getAllDiaryPhotos();
-      return photos.find(photo => photo.id === id);
-    } catch (error) {
-      console.error("Error fetching diary photo:", error);
-      throw error;
-    }
+  async createSupplier(supplier: InsertSupplier): Promise<Supplier> {
+    const [newSupplier] = await db.insert(suppliers).values(supplier).returning();
+    return newSupplier;
   }
 
-  async saveDiaryPhoto(photo: any): Promise<any> {
-    // For now, return a mock response since photos are stored in the diary entries
-    return {
-      id: Date.now(),
-      workId: photo.workId,
-      date: photo.date,
-      url: photo.data
-    };
+  async updateSupplier(id: number, supplier: Partial<InsertSupplier>): Promise<Supplier> {
+    const [updated] = await db
+      .update(suppliers)
+      .set({ ...supplier, updatedAt: new Date() })
+      .where(eq(suppliers.id, id))
+      .returning();
+    return updated;
   }
 
-  async getAllExpenseDocuments(): Promise<any[]> {
-    try {
-      const expensesWithReceipts = await db
-        .select({
-          id: expenses.id,
-          workId: expenses.projectId,
-          date: expenses.date,
-          projectName: projects.name,
-          name: expenses.description,
-          url: expenses.receiptImage,
-          amount: expenses.amount,
-        })
-        .from(expenses)
-        .innerJoin(projects, eq(expenses.projectId, projects.id))
-        .where(sql`${expenses.receiptImage} IS NOT NULL`)
-        .orderBy(desc(expenses.date));
+  async deleteSupplier(id: number): Promise<void> {
+    await db.delete(suppliers).where(eq(suppliers.id, id));
+  }
 
-      return expensesWithReceipts;
-    } catch (error) {
-      console.error("Error fetching expense documents:", error);
-      throw error;
-    }
+  // ============================================
+  // QUOTATION OPERATIONS
+  // ============================================
+  async getQuotationsByProject(projectId: number): Promise<Quotation[]> {
+    return await db
+      .select()
+      .from(quotations)
+      .where(eq(quotations.projectId, projectId))
+      .orderBy(desc(quotations.createdAt));
+  }
+
+  async createQuotation(quotation: InsertQuotation): Promise<Quotation> {
+    const [newQuotation] = await db.insert(quotations).values(quotation).returning();
+    return newQuotation;
+  }
+
+  async updateQuotation(id: number, quotation: Partial<InsertQuotation>): Promise<Quotation> {
+    const [updated] = await db
+      .update(quotations)
+      .set({ ...quotation, updatedAt: new Date() })
+      .where(eq(quotations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteQuotation(id: number): Promise<void> {
+    await db.delete(quotations).where(eq(quotations.id, id));
+  }
+
+  // ============================================
+  // REGISTER OPERATIONS
+  // ============================================
+  async getRegistersByProject(projectId: number): Promise<Register[]> {
+    return await db
+      .select()
+      .from(registers)
+      .where(eq(registers.projectId, projectId))
+      .orderBy(desc(registers.createdAt));
+  }
+
+  async createRegister(register: InsertRegister): Promise<Register> {
+    const [newRegister] = await db.insert(registers).values(register).returning();
+    return newRegister;
+  }
+
+  async deleteRegister(id: number): Promise<void> {
+    await db.delete(registers).where(eq(registers.id, id));
   }
 }
 

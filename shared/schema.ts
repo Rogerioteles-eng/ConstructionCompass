@@ -15,7 +15,9 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table - mandatory for Replit Auth
+// ============================================
+// SESSIONS - Replit Auth
+// ============================================
 export const sessions = pgTable(
   "sessions",
   {
@@ -26,24 +28,29 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table - mandatory for Replit Auth
+// ============================================
+// USERS
+// ============================================
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").notNull().default("viewer"), // admin, buyer, master, contractor, worker, viewer
+  role: varchar("role").notNull().default("viewer"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ============================================
+// PROJECTS - Obras
+// ============================================
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   address: text("address").notNull(),
   client: varchar("client", { length: 255 }).notNull(),
-  status: varchar("status").notNull().default("planning"), // planning, execution, paused, completed
+  status: varchar("status").notNull().default("planning"),
   description: text("description"),
   startDate: date("start_date"),
   endDate: date("end_date"),
@@ -55,10 +62,13 @@ export const projectCollaborators = pgTable("project_collaborators", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
   userId: varchar("user_id").notNull().references(() => users.id),
-  role: varchar("role").notNull(), // project-specific role
+  role: varchar("role").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ============================================
+// BUDGETS - Orçamentos
+// ============================================
 export const budgets = pgTable("budgets", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
@@ -92,7 +102,7 @@ export const budgetSubitems = pgTable("budget_subitems", {
   itemId: integer("item_id").notNull().references(() => budgetItems.id),
   description: text("description").notNull(),
   quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull(),
-  unit: varchar("unit", { length: 50 }).notNull(), // m², m, unidade, rolo, balde, etc
+  unit: varchar("unit", { length: 50 }).notNull(),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   order: integer("order").notNull(),
@@ -100,24 +110,30 @@ export const budgetSubitems = pgTable("budget_subitems", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ============================================
+// EXPENSES - Gastos
+// ============================================
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
-  subitemId: integer("subitem_id").references(() => budgetSubitems.id), // optional link to budget subitem
+  subitemId: integer("subitem_id").references(() => budgetSubitems.id),
   date: date("date").notNull(),
   description: text("description").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  receiptImage: text("receipt_image"), // Base64 encoded image data
+  receiptImage: text("receipt_image"),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ============================================
+// WORK DIARIES - Diário de Obras
+// ============================================
 export const workDiaries = pgTable("work_diaries", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
   date: date("date").notNull(),
   activities: text("activities").notNull(),
-  photos: text("photos").array(), // Array of base64 encoded images
+  photos: text("photos").array(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -132,6 +148,9 @@ export const workDiaryWorkers = pgTable("work_diary_workers", {
   isContractor: boolean("is_contractor").notNull().default(false),
 });
 
+// ============================================
+// MEASUREMENTS - Medições
+// ============================================
 export const measurements = pgTable("measurements", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
@@ -145,47 +164,103 @@ export const measurements = pgTable("measurements", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ============================================
+// SCHEDULE - Cronograma
+// ============================================
 export const scheduleItems = pgTable("schedule_items", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id),
-  stageId: integer("stage_id").references(() => budgetStages.id), // linked to budget stage
+  stageId: integer("stage_id").references(() => budgetStages.id),
   name: varchar("name", { length: 255 }).notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  duration: integer("duration").notNull(), // days
-  progress: decimal("progress", { precision: 5, scale: 2 }).notNull().default("0"), // percentage
-  dependencies: text("dependencies"), // JSON array of dependent task IDs
-  status: varchar("status").notNull().default("scheduled"), // scheduled, in_progress, completed, delayed
+  duration: integer("duration").notNull(),
+  progress: decimal("progress", { precision: 5, scale: 2 }).notNull().default("0"),
+  dependencies: text("dependencies"),
+  status: varchar("status").notNull().default("scheduled"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Tabela de funcionários - cadastro único (não vinculado a obras específicas)
+// ============================================
+// EMPLOYEES - Funcionários
+// ============================================
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  role: varchar("role", { length: 100 }).notNull(), // pedreiro, servente, pintor, eletricista, etc.
-  dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(), // valor da diária
-  isContractor: boolean("is_contractor").notNull().default(false), // distingue empreiteiro de funcionário
+  role: varchar("role", { length: 100 }).notNull(),
+  dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(),
+  isContractor: boolean("is_contractor").notNull().default(false),
   phone: varchar("phone", { length: 20 }),
-  document: varchar("document", { length: 50 }), // CPF ou RG
-  status: varchar("status", { length: 20 }).notNull().default("ativo"), // ativo, inativo, afastado
+  document: varchar("document", { length: 50 }),
+  status: varchar("status", { length: 20 }).notNull().default("ativo"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Tabela de presença diária dos funcionários no diário de obras
 export const workDiaryAttendance = pgTable("work_diary_attendance", {
   id: serial("id").primaryKey(),
   workDiaryId: integer("work_diary_id").notNull().references(() => workDiaries.id),
   employeeId: integer("employee_id").notNull().references(() => employees.id),
   hoursWorked: decimal("hours_worked", { precision: 4, scale: 2 }).notNull().default("8.00"),
-  dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(), // valor pago neste dia
-  activities: text("activities"), // atividades específicas do funcionário no dia
+  dailyRate: decimal("daily_rate", { precision: 10, scale: 2 }).notNull(),
+  activities: text("activities"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Relations
+// ============================================
+// SUPPLIERS - Fornecedores (NOVO)
+// ============================================
+export const suppliers = pgTable("suppliers", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  name: text("name").notNull(),
+  contact: text("contact"),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  category: text("category"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ============================================
+// QUOTATIONS - Mapas de Cotação (NOVO)
+// ============================================
+export const quotations = pgTable("quotations", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  title: text("title").notNull(),
+  supplier: text("supplier"),
+  description: text("description"),
+  amount: decimal("amount", { precision: 12, scale: 2 }),
+  status: text("status").default("pending"),
+  validUntil: date("valid_until"),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ============================================
+// REGISTERS - Registros de Obra (NOVO)
+// ============================================
+export const registers = pgTable("registers", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  title: text("title").notNull(),
+  type: text("type").default("occurrence"),
+  description: text("description"),
+  priority: text("priority").default("normal"),
+  date: date("date"),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ============================================
+// RELATIONS
+// ============================================
 export const usersRelations = relations(users, ({ many }) => ({
   projectCollaborators: many(projectCollaborators),
   expenses: many(expenses),
@@ -200,6 +275,9 @@ export const projectsRelations = relations(projects, ({ many }) => ({
   workDiaries: many(workDiaries),
   measurements: many(measurements),
   scheduleItems: many(scheduleItems),
+  suppliers: many(suppliers),
+  quotations: many(quotations),
+  registers: many(registers),
 }));
 
 export const projectCollaboratorsRelations = relations(projectCollaborators, ({ one }) => ({
@@ -322,7 +400,30 @@ export const workDiaryAttendanceRelations = relations(workDiaryAttendance, ({ on
   }),
 }));
 
-// Insert schemas
+export const suppliersRelations = relations(suppliers, ({ one }) => ({
+  project: one(projects, {
+    fields: [suppliers.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const quotationsRelations = relations(quotations, ({ one }) => ({
+  project: one(projects, {
+    fields: [quotations.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const registersRelations = relations(registers, ({ one }) => ({
+  project: one(projects, {
+    fields: [registers.projectId],
+    references: [projects.id],
+  }),
+}));
+
+// ============================================
+// INSERT SCHEMAS
+// ============================================
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
@@ -395,7 +496,27 @@ export const insertWorkDiaryAttendanceSchema = createInsertSchema(workDiaryAtten
   createdAt: true,
 });
 
-// Types
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertQuotationSchema = createInsertSchema(quotations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRegisterSchema = createInsertSchema(registers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// ============================================
+// TYPES
+// ============================================
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -437,3 +558,12 @@ export type WorkDiaryAttendance = typeof workDiaryAttendance.$inferSelect;
 export type InsertWorkDiaryAttendance = z.infer<typeof insertWorkDiaryAttendanceSchema>;
 
 export type ProjectCollaborator = typeof projectCollaborators.$inferSelect;
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+
+export type Quotation = typeof quotations.$inferSelect;
+export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
+
+export type Register = typeof registers.$inferSelect;
+export type InsertRegister = z.infer<typeof insertRegisterSchema>;
