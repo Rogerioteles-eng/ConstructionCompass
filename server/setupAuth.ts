@@ -4,7 +4,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import { db } from "./db";
-import { users } from "./schema";
+import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function setupAuth(app: Express) {
