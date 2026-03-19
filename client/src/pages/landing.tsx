@@ -1,211 +1,74 @@
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { HardHat, Building, Calculator, FileText, Calendar, BarChart3, Users, Zap } from "lucide-react";
-
-const goToAuth = () => window.location.href = '/auth';
+import { Building2, HardHat, CheckCircle, BarChart3 } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 construction-primary rounded-lg flex items-center justify-center">
-                <HardHat className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">ConstructionCompass</h1>
-                <p className="text-sm text-gray-500">Gestão de Obras</p>
-              </div>
-            </div>
-            <Button onClick={goToAuth} className="construction-primary">
-              Entrar
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Cabeçalho */}
+      <header className="bg-white shadow-sm py-4 px-6 md:px-12 flex justify-between items-center">
+        <div className="flex items-center gap-2 text-orange-600">
+          <Building2 className="h-8 w-8" />
+          <span className="text-xl font-bold text-gray-900">ConstructionCompass</span>
         </div>
+        <Link href="/auth">
+          <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+            Entrar
+          </Button>
+        </Link>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Gerencie suas obras com
-            <span className="text-primary"> inteligência</span>
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Sistema completo para controle de orçamento, medições, diário de obras, cronograma e relatórios. 
-            Com assistente de IA para preenchimento automático via comandos de voz e texto.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={goToAuth} className="construction-primary text-lg px-8 py-3">
-              Começar Agora
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-              Ver Demonstração
-            </Button>
-          </div>
+      {/* Secção Principal (Hero) */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-4 py-20">
+        <div className="bg-orange-100 p-4 rounded-full mb-6">
+          <HardHat className="h-12 w-12 text-orange-600" />
         </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              Tudo que você precisa em um só lugar
-            </h3>
-            <p className="text-lg text-gray-600">
-              Funcionalidades completas para gestão profissional de obras
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 construction-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Building className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Cadastro de Obras</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Organize seus projetos com informações detalhadas de clientes, endereços e status
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 construction-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Calculator className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Orçamentos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Estrutura hierárquica em 3 níveis com cálculos automáticos e controle detalhado
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 construction-success rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <FileText className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Diário de Obras</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Registro diário com funcionários, atividades e geração automática de folha de pagamento
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 construction-warning rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Cronograma</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Visualização estilo Gantt com controle de prazo e status de execução
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 construction-error rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <BarChart3 className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Relatórios</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Gráficos e relatórios detalhados de execução, gastos e produtividade
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Controle de Acesso</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Perfis de usuário com permissões específicas para cada tipo de colaborador
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Zap className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Assistente IA</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Preenchimento automático via comandos de voz, texto e análise de fotos
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <HardHat className="h-6 w-6 text-white" />
-                </div>
-                <CardTitle>Medições</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Controle de progresso físico das obras com medições por etapa e item
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 construction-primary">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Pronto para revolucionar sua gestão de obras?
-          </h3>
-          <p className="text-xl text-white/90 mb-8">
-            Comece hoje mesmo e experimente o poder da tecnologia na construção civil.
-          </p>
-          <Button size="lg" variant="secondary" onClick={goToAuth} className="text-lg px-8 py-3">
-            Entrar no Sistema
+        
+        <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 max-w-3xl">
+          Gestão Inteligente para a sua Obra
+        </h1>
+        
+        <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl">
+          O ConstructionCompass é o sistema definitivo para engenheiros e mestres de obra. 
+          Controle orçamentos, diários de obra, fornecedores e muito mais num só lugar.
+        </p>
+        
+        <Link href="/auth">
+          <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white text-lg px-8 py-6">
+            Começar Agora
           </Button>
-        </div>
-      </section>
+        </Link>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="w-8 h-8 construction-primary rounded-lg flex items-center justify-center">
-                <HardHat className="h-5 w-5 text-white" />
-              </div>
-              <h4 className="text-lg font-bold">ConstructionCompass</h4>
-            </div>
-            <p className="text-gray-400">
-              © 2025 ConstructionCompass. Sistema profissional de gestão de obras.
-            </p>
+        {/* Cartões de Funcionalidades */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-5xl w-full text-left">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <CheckCircle className="h-10 w-10 text-green-500 mb-4" />
+            <h3 className="text-xl font-bold mb-2">Diário de Obras</h3>
+            <p className="text-gray-600">Registe as atividades diárias facilmente usando o nosso assistente inteligente.</p>
           </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <BarChart3 className="h-10 w-10 text-blue-500 mb-4" />
+            <h3 className="text-xl font-bold mb-2">Controlo Financeiro</h3>
+            <p className="text-gray-600">Acompanhe orçamentos, gastos e medições em tempo real de forma simples.</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <Building2 className="h-10 w-10 text-orange-500 mb-4" />
+            <h3 className="text-xl font-bold mb-2">Gestão Integrada</h3>
+            <p className="text-gray-600">Mantenha fornecedores, cotações e materiais organizados por projeto.</p>
+          </div>
+        </div>
+      </main>
+
+      {/* Rodapé Corrigido */}
+      <footer className="bg-gray-900 text-white py-12 px-6 mt-auto">
+        <div className="max-w-5xl mx-auto flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-orange-500" />
+            <h4 className="text-lg font-bold">ConstructionCompass</h4>
+          </div>
+          <p className="text-gray-400 text-center">
+            © 2025 ConstructionCompass. Sistema profissional de gestão de obras.
+          </p>
         </div>
       </footer>
     </div>
