@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HardHat, Building, Calculator, FileText, Calendar, BarChart3, Users, Zap } from "lucide-react";
 
+const goToAuth = () => window.location.href = '/auth';
+
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
@@ -14,14 +16,11 @@ export default function Landing() {
                 <HardHat className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">MindMapMaster</h1>
+                <h1 className="text-2xl font-bold text-gray-900">ConstructionCompass</h1>
                 <p className="text-sm text-gray-500">Gestão de Obras</p>
               </div>
             </div>
-            <Button 
-              onClick={() => window.location.href = '/api/login'}
-              className="construction-primary"
-            >
+            <Button onClick={goToAuth} className="construction-primary">
               Entrar
             </Button>
           </div>
@@ -40,11 +39,7 @@ export default function Landing() {
             Com assistente de IA para preenchimento automático via comandos de voz e texto.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              onClick={() => window.location.href = '/api/login'}
-              className="construction-primary text-lg px-8 py-3"
-            >
+            <Button size="lg" onClick={goToAuth} className="construction-primary text-lg px-8 py-3">
               Começar Agora
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-3">
@@ -191,12 +186,7 @@ export default function Landing() {
           <p className="text-xl text-white/90 mb-8">
             Comece hoje mesmo e experimente o poder da tecnologia na construção civil.
           </p>
-          <Button 
-            size="lg"
-            variant="secondary"
-            onClick={() => window.location.href = '/auth'}
-            className="text-lg px-8 py-3"
-          >
+          <Button size="lg" variant="secondary" onClick={goToAuth} className="text-lg px-8 py-3">
             Entrar no Sistema
           </Button>
         </div>
@@ -210,10 +200,10 @@ export default function Landing() {
               <div className="w-8 h-8 construction-primary rounded-lg flex items-center justify-center">
                 <HardHat className="h-5 w-5 text-white" />
               </div>
-              <h4 className="text-lg font-bold">MindMapMaster</h4>
+              <h4 className="text-lg font-bold">ConstructionCompass</h4>
             </div>
             <p className="text-gray-400">
-              © 2024 MindMapMaster. Sistema profissional de gestão de obras.
+              © 2025 ConstructionCompass. Sistema profissional de gestão de obras.
             </p>
           </div>
         </div>
