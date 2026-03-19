@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import AuthPage from "@/pages/auth";
+import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 import ManagePage from "@/pages/ManagePage";
@@ -14,7 +15,6 @@ import Reports from "@/pages/Reports";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Aguarda verificar se está logado
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -25,12 +25,14 @@ function Router() {
     );
   }
 
-  // Se não estiver logado, mostra tela de auth
   if (!isAuthenticated) {
-    return <AuthPage />;
+    // Mostra auth se acessar /auth, senão mostra landing
+    if (window.location.pathname === "/auth") {
+      return <AuthPage />;
+    }
+    return <Landing />;
   }
 
-  // Se estiver logado, mostra o sistema
   return (
     <Switch>
       <Route path="/" component={Dashboard} />

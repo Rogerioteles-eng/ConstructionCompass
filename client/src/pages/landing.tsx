@@ -194,7 +194,7 @@ export default function Landing() {
           <Button 
             size="lg"
             variant="secondary"
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/auth'}
             className="text-lg px-8 py-3"
           >
             Entrar no Sistema
