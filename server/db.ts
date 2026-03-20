@@ -4,13 +4,20 @@ import * as schema from "@shared/schema";
 import "dotenv/config";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  throw new Error("DATABASE_URL is missing!");
 }
 
-// O Supabase no Render funciona melhor com o driver 'postgres-js'
-// O disable_prepare: true é importante para o modo "Transaction" do Supabase (porta 6543)
-const client = postgres(process.env.DATABASE_URL, { prepare: false });
+/**
+ * Configuração ultra-resiliente para Supabase:
+ * 1. max: 1 -> Evita estourar o limite de conexões do plano gratuito.
+ * 2. prepare: false -> OBRIGATÓRIO para a porta 6543 (Transaction Mode).
+ * 3. connect_timeout: 10 -> Evita que o Render fique esperando infinitamente.
+ */
+const client = postgres(process.env.DATABASE_URL, { 
+  prepare: false,
+  max: 1,
+  connect_timeout: 10,
+  ssl: 'require' 
+});
 
 export const db = drizzle(client, { schema });
