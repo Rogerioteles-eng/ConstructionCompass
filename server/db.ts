@@ -1,14 +1,7 @@
-import "dotenv/config";
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from "@shared/schema";
-
-// Necessário para o Neon funcionar fora do ambiente serverless
-neonConfig.webSocketConstructor = ws;
-neonConfig.useSecureWebSocket = true;
-neonConfig.pipelineTLS = false;
-neonConfig.pipelineConnect = false;
+import "dotenv/config";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -16,5 +9,8 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// O Supabase no Render funciona melhor com o driver 'postgres-js'
+// O disable_prepare: true é importante para o modo "Transaction" do Supabase (porta 6543)
+const client = postgres(process.env.DATABASE_URL, { prepare: false });
+
+export const db = drizzle(client, { schema });
