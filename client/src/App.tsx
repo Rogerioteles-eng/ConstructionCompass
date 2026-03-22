@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,6 +12,7 @@ import NotFound from "@/pages/not-found";
 import ManagePage from "@/pages/ManagePage";
 import Finances from "@/pages/Finances";
 import Reports from "@/pages/Reports";
+import ProjectLayout from "@/layouts/ProjectLayout";
 import Suppliers from "@/pages/suppliers";
 import Quotations from "@/pages/quotations";
 import Registers from "@/pages/registers";
@@ -46,9 +47,14 @@ function AppRoutes() {
       <Route path="/manage" element={<ManagePage />} />
       <Route path="/finances" element={<Finances />} />
       <Route path="/reports" element={<Reports />} />
-      <Route path="/projects/:projectId/suppliers" element={<Suppliers />} />
-      <Route path="/projects/:projectId/quotations" element={<Quotations />} />
-      <Route path="/projects/:projectId/registers" element={<Registers />} />
+      
+      {/* Rotas agrupadas dentro do Layout do Projeto */}
+      <Route path="/projects/:projectId" element={<ProjectLayout />}>
+        <Route path="suppliers" element={<Suppliers />} />
+        <Route path="quotations" element={<Quotations />} />
+        <Route path="registers" element={<Registers />} />
+      </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

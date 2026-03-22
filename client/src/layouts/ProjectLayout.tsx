@@ -1,16 +1,12 @@
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useLocation, useParams, Outlet } from "react-router-dom";
 import { ArrowLeft, BookOpen, Users, Share2, Truck, MapPin, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface ProjectLayoutProps {
-  children: React.ReactNode;
-  projectId: string;
-}
-
-export default function ProjectLayout({ children, projectId }: ProjectLayoutProps) {
-  const [location] = useLocation();
+export default function ProjectLayout() {
+  const location = useLocation();
+  const { projectId } = useParams();
 
   const navItems = [
     { path: "diary", label: "Diário de Obras", icon: BookOpen },
@@ -22,10 +18,10 @@ export default function ProjectLayout({ children, projectId }: ProjectLayoutProp
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/">
+          <Link to="/">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar para Obras
@@ -36,15 +32,15 @@ export default function ProjectLayout({ children, projectId }: ProjectLayoutProp
       </div>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <nav className="flex flex-wrap gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const itemPath = `/projects/${projectId}/${item.path}`;
-              const isActive = location === itemPath;
-              
+              const isActive = location.pathname.includes(item.path);
+
               return (
-                <Link key={item.path} href={itemPath}>
+                <Link key={item.path} to={itemPath}>
                   <Button
                     variant={isActive ? "default" : "outline"}
                     size="sm"
@@ -62,9 +58,10 @@ export default function ProjectLayout({ children, projectId }: ProjectLayoutProp
           </nav>
         </CardContent>
       </Card>
-      
-      <div>
-        {children}
+
+      {/* É aqui que as páginas filhas (Fornecedores, Cotações, etc) vão aparecer */}
+      <div className="bg-white rounded-lg shadow-sm border p-4">
+        <Outlet />
       </div>
     </div>
   );
