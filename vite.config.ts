@@ -19,4 +19,12 @@ export default defineConfig({
       '@shared': resolve(__dirname, 'shared'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

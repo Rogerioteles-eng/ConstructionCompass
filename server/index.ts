@@ -1,8 +1,16 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// ✅ CORS (CORREÇÃO PRINCIPAL)
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 

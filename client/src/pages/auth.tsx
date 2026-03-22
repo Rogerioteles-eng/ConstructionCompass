@@ -13,9 +13,10 @@ export default function AuthPage() {
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
       if (!res.ok) {
@@ -26,15 +27,17 @@ export default function AuthPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      window.location.href = "/";
     },
     onError: (err: Error) => setError(err.message),
   });
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, email, password }),
       });
       if (!res.ok) {
@@ -45,6 +48,7 @@ export default function AuthPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      window.location.href = "/";
     },
     onError: (err: Error) => setError(err.message),
   });
@@ -65,7 +69,6 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
 
-        {/* Logo/Título */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-orange-600">
             ConstructionCompass
@@ -75,14 +78,12 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {/* Erro */}
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
             {error}
           </div>
         )}
 
-        {/* Formulário */}
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div>
@@ -93,7 +94,7 @@ export default function AuthPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
               placeholder="seu_usuario"
               required
             />
@@ -108,7 +109,7 @@ export default function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 placeholder="seu@email.com"
                 required
               />
@@ -123,7 +124,7 @@ export default function AuthPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
               placeholder="••••••••"
               required
             />
@@ -132,7 +133,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-orange-600 text-white py-2 rounded-lg font-semibold hover:bg-orange-700 disabled:opacity-50 transition"
+            className="w-full bg-orange-600 text-white py-2 rounded-lg font-semibold"
           >
             {isLoading
               ? "Aguarde..."
@@ -142,14 +143,13 @@ export default function AuthPage() {
           </button>
         </form>
 
-        {/* Alternar entre login e registro */}
         <div className="text-center mt-6 text-sm text-gray-600">
           {mode === "login" ? (
             <>
               Não tem conta?{" "}
               <button
                 onClick={() => { setMode("register"); setError(""); }}
-                className="text-orange-600 font-semibold hover:underline"
+                className="text-orange-600 font-semibold"
               >
                 Criar conta
               </button>
@@ -159,7 +159,7 @@ export default function AuthPage() {
               Já tem conta?{" "}
               <button
                 onClick={() => { setMode("login"); setError(""); }}
-                className="text-orange-600 font-semibold hover:underline"
+                className="text-orange-600 font-semibold"
               >
                 Entrar
               </button>
