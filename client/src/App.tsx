@@ -12,6 +12,9 @@ import NotFound from "@/pages/not-found";
 import ManagePage from "@/pages/ManagePage";
 import Finances from "@/pages/Finances";
 import Reports from "@/pages/Reports";
+import Suppliers from "@/pages/suppliers";
+import Quotations from "@/pages/quotations";
+import Registers from "@/pages/registers";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -43,6 +46,9 @@ function AppRoutes() {
       <Route path="/manage" element={<ManagePage />} />
       <Route path="/finances" element={<Finances />} />
       <Route path="/reports" element={<Reports />} />
+      <Route path="/projects/:projectId/suppliers" element={<Suppliers />} />
+      <Route path="/projects/:projectId/quotations" element={<Quotations />} />
+      <Route path="/projects/:projectId/registers" element={<Registers />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

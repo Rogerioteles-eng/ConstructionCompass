@@ -18,6 +18,9 @@ import {
   insertScheduleItemSchema,
   insertEmployeeSchema,
   insertWorkDiaryAttendanceSchema,
+  insertSupplierSchema,
+  insertQuotationSchema,
+  insertRegisterSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -423,10 +426,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/suppliers", isAuthenticated, async (req: any, res) => {
+  app.post("/api/projects/:projectId/suppliers", isAuthenticated, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
-      const supplier = await storage.createSupplier({ ...req.body, projectId });
+      const data = insertSupplierSchema.parse({ ...req.body, projectId });
+      const supplier = await storage.createSupplier(data);
       res.status(201).json(supplier);
     } catch (error) {
       res.status(400).json({ message: "Failed to create supplier" });
@@ -436,7 +440,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/suppliers/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const supplier = await storage.updateSupplier(id, req.body);
+      const data = insertSupplierSchema.partial().parse(req.body);
+      const supplier = await storage.updateSupplier(id, data);
       res.json(supplier);
     } catch (error) {
       res.status(400).json({ message: "Failed to update supplier" });
@@ -470,11 +475,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const userId = req.user.claims.sub;
-      const quotation = await storage.createQuotation({
+      const data = insertQuotationSchema.parse({
         ...req.body,
         projectId,
         createdBy: userId,
       });
+      const quotation = await storage.createQuotation(data);
       res.status(201).json(quotation);
     } catch (error) {
       res.status(400).json({ message: "Failed to create quotation" });
@@ -484,7 +490,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/quotations/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const quotation = await storage.updateQuotation(id, req.body);
+      const data = insertQuotationSchema.partial().parse(req.body);
+      const quotation = await storage.updateQuotation(id, data);
       res.json(quotation);
     } catch (error) {
       res.status(400).json({ message: "Failed to update quotation" });
@@ -518,11 +525,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const userId = req.user.claims.sub;
-      const register = await storage.createRegister({
+      const data = insertRegisterSchema.parse({
         ...req.body,
         projectId,
         createdBy: userId,
       });
+      const register = await storage.createRegister(data);
       res.status(201).json(register);
     } catch (error) {
       res.status(400).json({ message: "Failed to create register" });
