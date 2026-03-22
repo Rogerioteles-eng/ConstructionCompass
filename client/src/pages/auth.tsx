@@ -13,7 +13,7 @@ export default function AuthPage() {
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -34,7 +34,7 @@ export default function AuthPage() {
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -68,28 +68,20 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-orange-600">
-            ConstructionCompass
-          </h1>
+          <h1 className="text-3xl font-bold text-orange-600">ConstructionCompass</h1>
           <p className="text-gray-500 mt-2">
             {mode === "login" ? "Entre na sua conta" : "Crie sua conta"}
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Usuário
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
             <input
               type="text"
               value={username}
@@ -102,9 +94,7 @@ export default function AuthPage() {
 
           {mode === "register" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -117,9 +107,7 @@ export default function AuthPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Senha
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
             <input
               type="password"
               value={password}
@@ -135,11 +123,7 @@ export default function AuthPage() {
             disabled={isLoading}
             className="w-full bg-orange-600 text-white py-2 rounded-lg font-semibold"
           >
-            {isLoading
-              ? "Aguarde..."
-              : mode === "login"
-              ? "Entrar"
-              : "Criar Conta"}
+            {isLoading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar Conta"}
           </button>
         </form>
 
@@ -147,26 +131,19 @@ export default function AuthPage() {
           {mode === "login" ? (
             <>
               Não tem conta?{" "}
-              <button
-                onClick={() => { setMode("register"); setError(""); }}
-                className="text-orange-600 font-semibold"
-              >
+              <button onClick={() => { setMode("register"); setError(""); }} className="text-orange-600 font-semibold">
                 Criar conta
               </button>
             </>
           ) : (
             <>
               Já tem conta?{" "}
-              <button
-                onClick={() => { setMode("login"); setError(""); }}
-                className="text-orange-600 font-semibold"
-              >
+              <button onClick={() => { setMode("login"); setError(""); }} className="text-orange-600 font-semibold">
                 Entrar
               </button>
             </>
           )}
         </div>
-
       </div>
     </div>
   );
