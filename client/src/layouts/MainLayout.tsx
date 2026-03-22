@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "react-router-dom";
 import { Building2, Settings, DollarSign, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children, onOpenAI }: MainLayoutProps) {
-  const [location] = useLocation();
+  const location = useLocation();
 
   const navItems = [
     { path: "/", label: "Obras", icon: Building2 },
@@ -25,7 +25,7 @@ export default function MainLayout({ children, onOpenAI }: MainLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <Link href="/">
+              <Link to="/">
                 <div className="flex items-center space-x-2">
                   <Building2 className="h-8 w-8 text-blue-600" />
                   <span className="text-xl font-bold text-gray-900">MindMapMaster</span>
@@ -35,10 +35,10 @@ export default function MainLayout({ children, onOpenAI }: MainLayoutProps) {
               <nav className="flex space-x-4">
                 {navItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location === item.path || (item.path !== "/" && location.startsWith(item.path));
+                  const isActive = location.pathname === item.path || (item.path !== "/" && location.pathname.startsWith(item.path));
                   
                   return (
-                    <Link key={item.path} href={item.path}>
+                    <Link key={item.path} to={item.path}>
                       <Button
                         variant="ghost"
                         className={cn(
@@ -56,9 +56,9 @@ export default function MainLayout({ children, onOpenAI }: MainLayoutProps) {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Link href="/api/logout">
+              <a href="/api/logout">
                 <Button variant="outline">Sair</Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>

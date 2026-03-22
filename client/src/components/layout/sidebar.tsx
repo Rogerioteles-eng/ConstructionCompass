@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,7 +38,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, onToggleAI }: SidebarProps) {
-  const [location] = useLocation();
+  const location = useLocation();
   const { user } = useAuth();
 
   const getUserInitials = (user: any) => {
@@ -101,9 +101,9 @@ export default function Sidebar({ isOpen, onToggleAI }: SidebarProps) {
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
-          const isActive = location === item.href;
+          const isActive = location.pathname === item.href;
           return (
-            <Link key={item.name} href={item.href}>
+            <Link key={item.name} to={item.href}>
               <div className={cn(
                 "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors cursor-pointer",
                 isActive 
